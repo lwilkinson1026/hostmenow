@@ -1,0 +1,157 @@
+{
+ "Main.dc.html": {
+  "title": "A \u00b7 Locked landing (web 1440)",
+  "w": 1440,
+  "h": 900
+ },
+ "Landing-Mobile.dc.html": {
+  "title": "A \u00b7 Locked landing (mobile)",
+  "w": 393,
+  "h": 852
+ },
+ "Landing-Invalid.dc.html": {
+  "title": "A \u00b7 Invalid code",
+  "w": 393,
+  "h": 852
+ },
+ "Welcome.dc.html": {
+  "title": "B1 \u00b7 Invite welcome",
+  "w": 393,
+  "h": 852
+ },
+ "SignIn.dc.html": {
+  "title": "B2 \u00b7 Sign in",
+  "w": 393,
+  "h": 852
+ },
+ "IdScan.dc.html": {
+  "title": "B3a \u00b7 ID scan",
+  "w": 393,
+  "h": 852
+ },
+ "Selfie.dc.html": {
+  "title": "B3b \u00b7 Selfie",
+  "w": 393,
+  "h": 852
+ },
+ "HouseRules.dc.html": {
+  "title": "B4 \u00b7 House rules",
+  "w": 393,
+  "h": 852
+ },
+ "SayHello.dc.html": {
+  "title": "B5 \u00b7 Video intro",
+  "w": 393,
+  "h": 852
+ },
+ "Question1.dc.html": {
+  "title": "B5 \u00b7 Question 1 (ready)",
+  "w": 393,
+  "h": 852
+ },
+ "Question2.dc.html": {
+  "title": "B5 \u00b7 Question 2 (recording)",
+  "w": 393,
+  "h": 852
+ },
+ "Question3.dc.html": {
+  "title": "B5 \u00b7 Question 3 (recorded)",
+  "w": 393,
+  "h": 852
+ },
+ "Pay.dc.html": {
+  "title": "B6 \u00b7 Pay",
+  "w": 393,
+  "h": 852
+ },
+ "YoureIn.dc.html": {
+  "title": "B7 \u00b7 You're in",
+  "w": 393,
+  "h": 852
+ },
+ "Explore.dc.html": {
+  "title": "C \u00b7 Explore",
+  "w": 393,
+  "h": 852
+ },
+ "ExploreMap.dc.html": {
+  "title": "C \u00b7 Explore, map",
+  "w": 393,
+  "h": 852
+ },
+ "Listing.dc.html": {
+  "title": "D \u00b7 Listing detail",
+  "w": 393,
+  "h": 852
+ },
+ "Book.dc.html": {
+  "title": "E \u00b7 Book (sheet)",
+  "w": 393,
+  "h": 852
+ },
+ "Confirmed.dc.html": {
+  "title": "F \u00b7 Booking confirmed",
+  "w": 393,
+  "h": 852
+ },
+ "TripDetail.dc.html": {
+  "title": "H \u00b7 Trip detail",
+  "w": 393,
+  "h": 852
+ },
+ "Trips.dc.html": {
+  "title": "G \u00b7 Trips",
+  "w": 393,
+  "h": 852
+ },
+ "You.dc.html": {
+  "title": "I \u00b7 You",
+  "w": 393,
+  "h": 852
+ },
+ "NightsBank.dc.html": {
+  "title": "J \u00b7 Nights bank",
+  "w": 393,
+  "h": 852
+ },
+ "Invites.dc.html": {
+  "title": "K \u00b7 Invites",
+  "w": 393,
+  "h": 852
+ },
+ "Explore-HalfOff.dc.html": {
+  "title": "C \u00b7 Explore, free nights used",
+  "w": 393,
+  "h": 852
+ },
+ "State-IdVerifying.dc.html": {
+  "title": "L \u00b7 ID still verifying",
+  "w": 393,
+  "h": 852
+ },
+ "State-IdFailed.dc.html": {
+  "title": "L \u00b7 ID failed",
+  "w": 393,
+  "h": 852
+ },
+ "State-Lapsed.dc.html": {
+  "title": "L \u00b7 Membership paused",
+  "w": 393,
+  "h": 852
+ },
+ "State-ExploreEmpty.dc.html": {
+  "title": "C \u00b7 Explore, empty",
+  "w": 393,
+  "h": 852
+ },
+ "State-TripsEmpty.dc.html": {
+  "title": "G \u00b7 Trips, empty",
+  "w": 393,
+  "h": 852
+ },
+ "Components.dc.html": {
+  "title": "Component sheet",
+  "w": 1440,
+  "h": 1180
+ }
+}

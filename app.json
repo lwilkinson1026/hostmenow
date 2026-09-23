@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "hostmenow",
+    "slug": "hostmenow",
+    "scheme": "hostmenow",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#0B0B0B",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.hostmenow.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "hostmenow uses the camera to check your ID and record your intro.",
+        "NSMicrophoneUsageDescription": "hostmenow records audio with your intro video."
+      }
+    },
+    "android": {
+      "package": "com.hostmenow.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B0B0B",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "output": "single",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-image",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        { "backgroundColor": "#0B0B0B", "image": "./assets/splash-icon.png", "imageWidth": 120 }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "hostmenow uses the camera to check your ID and record your intro.",
+          "microphonePermission": "hostmenow records audio with your intro video."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
