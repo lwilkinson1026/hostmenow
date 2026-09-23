@@ -9,6 +9,7 @@ import { OnboardingScreen } from '@/components/Onboarding';
 import { T } from '@/components/Text';
 import { useApp } from '@/store/app';
 import { colors } from '@/theme';
+import { BRAND } from '@/config';
 
 /** B7. You're in. "Start exploring" cross-fades from dark onboarding to the light app. */
 export default function YoureIn() {
@@ -41,7 +42,7 @@ export default function YoureIn() {
       >
         <View style={{ gap: 14, marginTop: -20 }}>
           <T variant="display" tone="dark">5 nights are yours.</T>
-          <T tone="dark" color="inkSecondary">Anywhere on hostmenow, within 5 days of arrival.</T>
+          <T tone="dark" color="inkSecondary">Anywhere on {BRAND}, within 5 days of arrival.</T>
         </View>
       </OnboardingScreen>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.light.bg }, fade]} />

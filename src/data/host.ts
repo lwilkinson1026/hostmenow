@@ -1,5 +1,6 @@
 // Mock Hostshare host for the opt-in prototype (handoff section 4).
 import type { ReservationEvent } from '@/lib/shareLedger';
+import { BRAND } from '@/config';
 
 export type HostListing = {
   id: string;
@@ -59,7 +60,7 @@ export const notices = [
 
 export const hostTerms = [
   'Members only book nights within 5 days of check-in.',
-  'Paid stays are 50% of your nightly rate. hostmenow keeps 12%. Cleaning fees are yours.',
+  `Paid stays are 50% of your nightly rate. ${BRAND} keeps 12%. Cleaning fees are yours.`,
   "Free member stays count toward your Hostshare share nights. Paid stays don't.",
   "Pool shares are paid quarterly. Estimates aren't guaranteed.",
   "You can't decline a member based on their photo or video.",

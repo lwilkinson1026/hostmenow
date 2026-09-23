@@ -8,6 +8,7 @@ import { T } from '@/components/Text';
 import { hostTerms } from '@/data/host';
 import { haptics, hostshare } from '@/services';
 import { useHost } from '@/store/host';
+import { BRAND } from '@/config';
 
 /** 6. The short version. Agreeing gates the button. */
 export default function Terms() {
@@ -45,7 +46,7 @@ export default function Terms() {
               {agreed ? <HostIcon name="check-bold" size={18} color="#FFFFFF" /> : null}
             </View>
             <T variant="callout" style={{ flex: 1, lineHeight: 21 }}>
-              I agree to the hostmenow Host Terms.{' '}
+              I agree to the {BRAND} Host Terms.{' '}
               <T
                 variant="calloutStrong"
                 accessibilityRole="link"

@@ -17,3 +17,6 @@ export const CHECK_IN_HOUR = 16;
 export const CHECKOUT_HOUR = 11;
 
 export const MEMBERSHIP_MONTHLY = 20;
+
+/** The name in running text. The logo (wordmark, labels, badges) never carries the mark. */
+export const BRAND = 'hostmenow™';

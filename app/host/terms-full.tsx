@@ -6,13 +6,14 @@ import { HostIcon } from '@/components/host/HostIcon';
 import { hs } from '@/components/host/HostUI';
 import { T } from '@/components/Text';
 import { useInsets } from '@/lib/insets';
+import { BRAND } from '@/config';
 
 /** Plain-language host terms. Placeholder for the legal document; the rules here are the decided ones. */
 const sections: { title: string; body: string[] }[] = [
   {
     title: 'Joining',
     body: [
-      'You choose which listings join hostmenow, and whether each one takes paid and free stays or paid stays only. Only the primary host of a listing can opt it in.',
+      `You choose which listings join ${BRAND}, and whether each one takes paid and free stays or paid stays only. Only the primary host of a listing can opt it in.`,
       'A listing needs last-minute availability turned on in your Hostshare Share Settings before it can join.',
       'You can leave any time. Stays already booked still happen.',
     ],
@@ -27,7 +28,7 @@ const sections: { title: string; body: string[] }[] = [
   {
     title: "How you're paid",
     body: [
-      'Paid stays are 50% of your nightly rate. hostmenow keeps 12% of that and you receive the rest with your Hostshare payouts. Cleaning fees are yours in full on every stay, free or paid.',
+      `Paid stays are 50% of your nightly rate. ${BRAND} keeps 12% of that and you receive the rest with your Hostshare payouts. Cleaning fees are yours in full on every stay, free or paid.`,
       "You also earn a share of membership revenue each quarter, based on the free member nights you host and the nights you make available. It is paid 15 days after the quarter ends. Amounts under $25 roll forward. Estimates aren't guaranteed.",
       'Pool payouts are reported on a 1099.',
     ],
@@ -44,7 +45,7 @@ const sections: { title: string; body: string[] }[] = [
     title: 'Cancellations',
     body: [
       'If a member cancels a free stay, it no longer counts toward your share nights.',
-      "If you cancel a confirmed member stay, it doesn't count toward your share nights, your pool share goes down, and Hostshare's $100 host cancellation fee applies. The fee goes into the hostmenow pool.",
+      `If you cancel a confirmed member stay, it doesn't count toward your share nights, your pool share goes down, and Hostshare's $100 host cancellation fee applies. The fee goes into the ${BRAND} pool.`,
     ],
   },
 ];
@@ -66,7 +67,7 @@ export default function HostTermsFull() {
         </Pressable>
       </View>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: insets.bottom + 32 }}>
-        <T variant="title" style={{ marginTop: 20 }}>hostmenow Host Terms</T>
+        <T variant="title" style={{ marginTop: 20 }}>{BRAND} Host Terms</T>
         {sections.map((s) => (
           <View key={s.title} style={styles.section}>
             <T variant="heading">{s.title}</T>

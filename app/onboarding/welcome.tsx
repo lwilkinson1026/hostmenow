@@ -7,6 +7,7 @@ import { DriftBackground } from '@/components/DriftBackground';
 import { OnboardingScreen } from '@/components/Onboarding';
 import { T } from '@/components/Text';
 import { member } from '@/data/mock';
+import { BRAND } from '@/config';
 
 /** B1. Invite welcome. */
 export default function Welcome() {
@@ -19,7 +20,7 @@ export default function Welcome() {
       <View style={{ alignItems: 'center', gap: 16, marginTop: -40 }}>
         <Avatar size={64} tone="dark" initials={member.invitedBy.initials} />
         <T variant="callout" tone="dark" color="inkSecondary">{member.invitedBy.name} invited you.</T>
-        <T variant="display" tone="dark" align="center" style={{ marginTop: 12 }}>Welcome to hostmenow.</T>
+        <T variant="display" tone="dark" align="center" style={{ marginTop: 12 }}>Welcome to {BRAND}.</T>
         <T tone="dark" color="inkSecondary" align="center" style={{ maxWidth: 300 }}>
           A private network of homes. Five nights on us each year.
         </T>

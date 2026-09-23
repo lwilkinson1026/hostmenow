@@ -10,6 +10,7 @@ import { pastGuests } from '@/data/host';
 import { useInsets } from '@/lib/insets';
 import { haptics, invites } from '@/services';
 import { invitesLeft, useHost } from '@/store/host';
+import { BRAND } from '@/config';
 
 /** 7. Live, with 5 host invites and suggested past guests. */
 export default function Live() {
@@ -39,7 +40,7 @@ export default function Live() {
             <HostIcon name="check-bold" size={26} color="#FFFFFF" />
           </View>
           <T variant="bodyStrong" style={{ marginTop: 8, fontSize: 34, lineHeight: 38, letterSpacing: -1 }}>
-            {count} {count === 1 ? 'listing is' : 'listings are'} live on hostmenow.
+            {count} {count === 1 ? 'listing is' : 'listings are'} live on {BRAND}.
           </T>
           <T variant="callout" color="inkSecondary" style={{ lineHeight: 21 }}>
             Members can now book any night that's still open 5 days out. We'll let you know when they do.

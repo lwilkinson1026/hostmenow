@@ -13,6 +13,7 @@ import { nextPoolPayout, roundTo } from '@/lib/pool';
 import { covered, fmtNights, replay } from '@/lib/shareLedger';
 import { haptics } from '@/services';
 import { invitesLeft, listingEstimate, useHost } from '@/store/host';
+import { BRAND } from '@/config';
 
 function greeting() {
   const h = new Date().getHours();
@@ -101,7 +102,7 @@ function EarningsCard() {
       </View>
       {host.tier === 'Pro' || host.tier === 'Pro+' ? (
         <View style={styles.row}>
-          <T variant="callout" style={{ flexShrink: 1 }}>Share nights covered by hostmenow</T>
+          <T variant="callout" style={{ flexShrink: 1 }}>Share nights covered by {BRAND}</T>
           <T variant="calloutStrong" style={{ fontVariant: ['tabular-nums'] }}>
             {fmtNights(covered(ledger, host.id, host.membershipYearStart))} of {host.pledge}
           </T>

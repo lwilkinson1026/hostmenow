@@ -6,7 +6,7 @@ import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 're
 import { PrimaryButton, TextButton } from '@/components/Buttons';
 import { DriftBackground } from '@/components/DriftBackground';
 import { T, Wordmark } from '@/components/Text';
-import { MEMBERSHIP_MONTHLY } from '@/config';
+import { BRAND, MEMBERSHIP_MONTHLY } from '@/config';
 import { useInsets } from '@/lib/insets';
 import { colors, motion } from '@/theme';
 
@@ -97,7 +97,7 @@ export default function Learn() {
                 5 nights free.{'\n'}5 days out.
               </T>
               <T tone="dark" color="inkSecondary" style={{ maxWidth: 440 }}>
-                hostmenow is a private travel membership for staying in homes run by Hostshare hosts.
+                {BRAND} is a private travel membership for staying in homes run by Hostshare hosts.
               </T>
             </View>
           </View>

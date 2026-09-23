@@ -89,7 +89,11 @@ export default function Landing() {
   );
 
   // Each style reads clock.value directly so the animation library tracks it (and it runs on the UI thread).
-  const { taglineAt, taglineSecondAt, fieldAt, fade } = INTRO;
+  const { taglineAt, taglineSecondAt, fieldAt, fade, caretEnd } = INTRO;
+  // "beta" appears where the caret was, just as the caret goes.
+  const betaStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(clock.value, [caretEnd - 100, caretEnd + 250], [0, 1], 'clamp'),
+  }));
   const taglineStyle = useAnimatedStyle(() => ({
     opacity: interpolate(clock.value, [taglineAt, taglineAt + fade], [0, 1], 'clamp'),
   }));
@@ -200,7 +204,14 @@ export default function Landing() {
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={[StyleSheet.absoluteFill, styles.center, { paddingBottom: wide ? 40 : 60, gap: wide ? 20 : 14 }]} pointerEvents="none">
-          <TypedWordmark size={wide ? 64 : 40} clock={clock} />
+          <View>
+            <TypedWordmark size={wide ? 64 : 40} clock={clock} />
+            <Animated.View style={[styles.beta, { top: wide ? 8 : 4 }, betaStyle]}>
+              <T variant="caption" tone="dark" color="inkSecondary" style={wide ? { fontSize: 15, lineHeight: 20 } : undefined}>
+                beta
+              </T>
+            </Animated.View>
+          </View>
           <View accessible accessibilityLabel="5 nights free. 5 days out." style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: wide ? 6 : 5 }}>
             <Animated.View style={taglineStyle}>
               <T tone="dark" color="inkSecondary" style={wide ? { fontSize: 19, lineHeight: 26 } : undefined}>
@@ -239,6 +250,8 @@ export default function Landing() {
 
 const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
+  /** Hangs off the wordmark's top right without shifting its centering. */
+  beta: { position: 'absolute', left: '100%', marginLeft: 4 },
   field: {
     flexDirection: 'row',
     alignItems: 'center',
