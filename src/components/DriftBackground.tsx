@@ -30,7 +30,7 @@ export function DriftBackground({ source, cropX = 50, overlay = motion.overlay.d
     };
   });
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <View style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]} pointerEvents="none">
       <Animated.View style={[StyleSheet.absoluteFill, style]}>
         <Image
           source={source}
