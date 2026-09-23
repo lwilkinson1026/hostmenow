@@ -8,10 +8,14 @@ import { Platform } from 'react-native';
  */
 const web = Platform.OS === 'web' && typeof document !== 'undefined';
 
-export function setPageBackground(background: string, themeColor: string) {
+/**
+ * `color` must be a solid color: Safari tints its bars from the page's
+ * background-color and falls back to white for gradients or images.
+ */
+export function setPageBackground(color: string, themeColor: string) {
   if (!web) return;
-  document.documentElement.style.background = background;
-  document.body.style.background = background;
+  document.documentElement.style.backgroundColor = color;
+  document.body.style.backgroundColor = color;
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
 }
 

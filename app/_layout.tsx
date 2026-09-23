@@ -27,19 +27,20 @@ const navTheme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background
 
 /**
  * Edge colors of the photos under their overlays, sampled from the images. Safari
- * fills its status bar and toolbar with a flat page color, so matching the photo's
- * top and bottom edges makes the bars read as part of the picture.
+ * fills its status bar and toolbar with the page's solid background color (and,
+ * on some versions, the top bar with theme-color), so these make the bars read as
+ * part of the picture. Gradients don't work: Safari falls back to white.
  */
 const LANDING_EDGES = { top: '#3B4B61', bottom: '#27313D' }; // landing-mobile.jpg at 36%, 40% overlay
 const LEARN_TOP = '#4F443B'; // cedar.jpg, 60% overlay
 
-/** The page color Safari shows above and below each screen on iPhone. */
+/** The solid page color and theme color Safari shows around each screen on iPhone. */
 function pageFor(pathname: string): [background: string, themeColor: string] {
   const dark = colors.dark.bg;
-  if (pathname === '/') return [`linear-gradient(${LANDING_EDGES.top} 50%, ${LANDING_EDGES.bottom} 50%)`, LANDING_EDGES.top];
+  if (pathname === '/') return [LANDING_EDGES.bottom, LANDING_EDGES.top];
   if (pathname.startsWith('/onboarding') || pathname === '/id-failed') return [dark, dark];
   // Photo header on top, white page below.
-  if (pathname === '/learn') return [`linear-gradient(${LEARN_TOP} 50%, ${colors.light.bg} 50%)`, LEARN_TOP];
+  if (pathname === '/learn') return [colors.light.bg, LEARN_TOP];
   if (pathname === '/host') return ['#FAFAF9', '#FAFAF9'];
   return [colors.light.bg, colors.light.bg];
 }
