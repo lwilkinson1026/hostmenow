@@ -48,6 +48,7 @@ export const type = {
   callout: t(15, 20, '400'),
   calloutStrong: t(15, 20, '600'),
   caption: t(13, 18, '400'),
+  captionStrong: t(13, 18, '600'),
   tab: t(11, 13, '400'),
   tabStrong: t(11, 13, '600'),
   wordmark: (size = 22) => t(size, size, '600', -2),

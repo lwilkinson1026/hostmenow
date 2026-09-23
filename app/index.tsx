@@ -99,9 +99,15 @@ export default function Landing() {
   );
 
   const privacy = (
-    <Pressable accessibilityRole="link" hitSlop={8}>
-      <T variant="caption" tone="dark" color="inkTertiary">Privacy</T>
-    </Pressable>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <Pressable accessibilityRole="link" hitSlop={8}>
+        <T variant="caption" tone="dark" color="inkTertiary">Privacy</T>
+      </Pressable>
+      <T variant="caption" tone="dark" color="inkTertiary">·</T>
+      <Pressable accessibilityRole="link" hitSlop={8} onPress={() => router.push('/host')}>
+        <T variant="caption" tone="dark" color="inkTertiary">Hostshare Hosts click here</T>
+      </Pressable>
+    </View>
   );
 
   return (

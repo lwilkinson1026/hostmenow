@@ -24,6 +24,12 @@ Also wired: the three tabs, the List / Map toggle, search, date chips, the night
 
 **Dev menu:** long-press the `hostmenow` wordmark on Explore to switch mock states: nights bank 5 or 0, membership paused, ID verifying or failed, empty Explore, empty Trips.
 
+## Host opt-in (Hostshare hosts)
+
+"Hostshare Hosts click here" at the bottom of the landing opens the host flow as it would appear inside the Hostshare app: dashboard card → value → choose listings → who you'll host → payouts and W-9 → terms → live with 5 host invites → the dashboard card becomes quarterly earnings ("Manage" edits listings).
+
+Estimates use the pool model from the handoff calculator (`src/lib/pool.ts`) with each listing's rate and open nights. Opt-in is mocked in `src/services/hostshare.ts`; the real version writes `hostmenow_optins` records against the host's Hostshare session.
+
 ## Layout
 
 ```
