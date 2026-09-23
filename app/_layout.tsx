@@ -5,7 +5,7 @@ import { useEffect, type ReactNode } from 'react';
 import { Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { setBackdrop, setPageBackground } from '@/lib/webChrome';
+import { pageColorsFor, setBackdrop, setPageBackground } from '@/lib/webChrome';
 import { colors, motion } from '@/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -25,30 +25,11 @@ function WebFrame({ children }: { children: ReactNode }) {
 /** Screens paint their own backgrounds; the navigator's default grey would hide the web backdrop. */
 const navTheme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: 'transparent' } };
 
-/**
- * Edge colors of the photos under their overlays, sampled from the images. Safari
- * fills its status bar and toolbar with the page's solid background color (and,
- * on some versions, the top bar with theme-color), so these make the bars read as
- * part of the picture. Gradients don't work: Safari falls back to white.
- */
-const LANDING_EDGES = { top: '#333A46', bottom: '#1A2129' }; // landing.jpg at 51%, 40% overlay
-const LEARN_TOP = '#4F443B'; // cedar.jpg, 60% overlay
-
-/** The solid page color and theme color Safari shows around each screen on iPhone. */
-function pageFor(pathname: string): [background: string, themeColor: string] {
-  const dark = colors.dark.bg;
-  if (pathname === '/') return [LANDING_EDGES.bottom, LANDING_EDGES.top];
-  if (pathname.startsWith('/onboarding') || pathname === '/id-failed') return [dark, dark];
-  // Photo header on top, white page below.
-  if (pathname === '/learn') return [colors.light.bg, LEARN_TOP];
-  if (pathname === '/host') return ['#FAFAF9', '#FAFAF9'];
-  return [colors.light.bg, colors.light.bg];
-}
-
 function WebPageChrome() {
   const pathname = usePathname();
   useEffect(() => {
-    setPageBackground(...pageFor(pathname));
+    // Learn More sets its own colors (dark during its prologue).
+    if (pathname !== '/learn') setPageBackground(...pageColorsFor(pathname));
     if (pathname !== '/') setBackdrop(null);
   }, [pathname]);
   return null;

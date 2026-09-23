@@ -1,13 +1,16 @@
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import type { ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { PrimaryButton, TextButton } from '@/components/Buttons';
+import { LearnPrelude } from '@/components/LearnPrelude';
 import { DriftBackground } from '@/components/DriftBackground';
 import { T, Wordmark } from '@/components/Text';
 import { BRAND, MEMBERSHIP_MONTHLY } from '@/config';
 import { useInsets } from '@/lib/insets';
+import { pageColorsFor, setPageBackground } from '@/lib/webChrome';
+import { useReducedMotion } from 'react-native-reanimated';
 import { colors, motion } from '@/theme';
 
 const steps = [
@@ -78,6 +81,16 @@ export default function Learn() {
   const { width, height } = useWindowDimensions();
   const wide = width >= 900;
   const column = { width: '100%', maxWidth: 640, alignSelf: 'center', paddingHorizontal: 24 } as const;
+
+  // The typed prologue plays each time the page opens (not for Reduce Motion).
+  const reduceMotion = useReducedMotion();
+  const [prelude, setPrelude] = useState(!reduceMotion);
+  const endPrelude = useCallback(() => setPrelude(false), []);
+  // Keep Safari's bars dark while the prologue plays, then match the page.
+  useEffect(() => {
+    if (prelude) setPageBackground(colors.dark.bg, colors.dark.bg);
+    else setPageBackground(...pageColorsFor('/learn'));
+  }, [prelude]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.light.bg }}>
@@ -171,6 +184,7 @@ export default function Learn() {
           </Section>
         </View>
       </ScrollView>
+      {prelude ? <LearnPrelude onDone={endPrelude} /> : null}
     </View>
   );
 }
