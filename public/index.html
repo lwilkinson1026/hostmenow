@@ -63,6 +63,32 @@
       #backdrop .shade {
         position: absolute;
         inset: 0;
+        background: #000;
+        opacity: var(--rest, 0.4);
+      }
+      /* Intro (src/lib/intro.ts has the same times): the lights-off photo fades
+         to reveal the lit windows while the overlay lifts from dark to rest. */
+      #backdrop img.dark {
+        opacity: 0;
+      }
+      #backdrop.intro img.dark {
+        opacity: 1;
+      }
+      #backdrop.intro .shade {
+        opacity: var(--dark, 0.78);
+      }
+      #backdrop.intro.lit img.dark {
+        opacity: 0;
+        transition: opacity 1000ms ease-in-out 400ms;
+      }
+      #backdrop.intro.lit .shade {
+        opacity: var(--rest, 0.4);
+        transition: opacity 1100ms ease-in-out 900ms;
+      }
+      #backdrop.intro.lit.fast img.dark,
+      #backdrop.intro.lit.fast .shade {
+        transition-duration: 250ms;
+        transition-delay: 0ms;
       }
       @keyframes drift {
         from { transform: scale(1.04) translate(0, 0); }
@@ -76,7 +102,7 @@
 
   <body>
     <noscript>You need to enable JavaScript to run hostmenow.</noscript>
-    <div id="backdrop" aria-hidden="true"><img alt="" /><div class="shade"></div></div>
+    <div id="backdrop" aria-hidden="true"><img class="lit" alt="" /><img class="dark" alt="" /><div class="shade"></div></div>
     <div id="root"></div>
   </body>
 </html>

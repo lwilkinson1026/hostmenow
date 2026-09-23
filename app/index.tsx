@@ -1,18 +1,20 @@
 import { Redirect, router, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, interpolate, runOnJS, useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useInsets } from '@/lib/insets';
 
 import { DriftBackground } from '@/components/DriftBackground';
 import { Icon } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { Spinner } from '@/components/Spinner';
-import { T, Wordmark } from '@/components/Text';
+import { T } from '@/components/Text';
+import { TypedWordmark } from '@/components/TypedWordmark';
+import { INTRO, introSeen, markIntroSeen } from '@/lib/intro';
 import { haptics, invites } from '@/services';
 import { useApp } from '@/store/app';
-import { hasWebBackdrop, setBackdrop } from '@/lib/webChrome';
+import { backdropIntro, hasWebBackdrop, setBackdrop } from '@/lib/webChrome';
 import { colors, motion, radius, type } from '@/theme';
 
 const WIDE = 900;
@@ -31,18 +33,67 @@ export default function Landing() {
   const [checking, setChecking] = useState(false);
   const input = useRef<TextInput>(null);
 
+  // Intro: the lights come on, the wordmark types, then the tagline and field appear.
+  // Once per visit, skipped for Reduce Motion, and a tap anywhere jumps to the end.
+  const reduceMotion = useReducedMotion();
+  const [skipIntro] = useState(() => introSeen() || reduceMotion);
+  const clock = useSharedValue(skipIntro ? INTRO.total : 0);
+  const [playing, setPlaying] = useState(!skipIntro);
+  const started = useRef(false);
+  const finish = useCallback(() => setPlaying(false), []);
+
+  const startIntro = useCallback(() => {
+    if (started.current) return;
+    started.current = true;
+    markIntroSeen();
+    if (skipIntro) {
+      backdropIntro('done');
+      return;
+    }
+    backdropIntro('play');
+    clock.set(
+      withTiming(INTRO.total, { duration: INTRO.total, easing: Easing.linear }, (done) => {
+        if (done) runOnJS(finish)();
+      }),
+    );
+  }, [clock, finish, skipIntro]);
+
+  // Never wait on a photo forever: if loading stalls, start anyway.
+  useEffect(() => {
+    const t = setTimeout(startIntro, 2500);
+    return () => clearTimeout(t);
+  }, [startIntro]);
+
+  const skip = () => {
+    if (!playing) return;
+    backdropIntro('skip');
+    clock.set(withTiming(INTRO.total, { duration: INTRO.skip }, (done) => {
+      if (done) runOnJS(finish)();
+    }));
+  };
+
+  const photo = wide
+    ? { source: require('../assets/photos/landing.jpg'), overlay: motion.overlay.landingWeb }
+    : { source: require('../assets/photos/landing.jpg'), cropX: LANDING_CROP_X, overlay: motion.overlay.landingMobile };
+  const darkSource = require('../assets/photos/landing-dark.jpg');
+
   // On web the photo is pinned behind the whole page so it fills the screen under Safari's bars.
   // Set on every focus: the landing stays mounted underneath other screens.
   useFocusEffect(
     useCallback(() => {
       if (!hasWebBackdrop) return;
-      setBackdrop(
-        wide
-          ? { source: require('../assets/photos/landing.jpg'), overlay: motion.overlay.landingWeb }
-          : { source: require('../assets/photos/landing.jpg'), cropX: LANDING_CROP_X, overlay: motion.overlay.landingMobile },
-      );
-    }, [wide]),
+      if (!started.current && !skipIntro) backdropIntro('dark');
+      setBackdrop({ ...photo, darkSource }).then(startIntro);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [wide, startIntro]),
   );
+
+  const at = (from: number) => ({ opacity: interpolate(clock.value, [from, from + INTRO.fade], [0, 1], 'clamp') });
+  const taglineStyle = useAnimatedStyle(() => at(INTRO.taglineAt));
+  const fieldStyle = useAnimatedStyle(() => ({
+    ...at(INTRO.fieldAt),
+    transform: [{ translateY: interpolate(clock.value, [INTRO.fieldAt, INTRO.fieldAt + INTRO.fade], [8, 0], 'clamp') }],
+  }));
 
   const x = useSharedValue(0);
   const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
@@ -132,34 +183,43 @@ export default function Landing() {
   return (
     <View style={{ flex: 1, backgroundColor: hasWebBackdrop ? 'transparent' : colors.dark.bg }}>
       <StatusBar style="light" />
-      {hasWebBackdrop ? null : wide ? (
-        <DriftBackground source={require('../assets/photos/landing.jpg')} overlay={motion.overlay.landingWeb} />
-      ) : (
-        <DriftBackground source={require('../assets/photos/landing.jpg')} cropX={LANDING_CROP_X} overlay={motion.overlay.landingMobile} />
+      {hasWebBackdrop ? null : (
+        <DriftBackground
+          source={photo.source}
+          cropX={photo.cropX}
+          overlay={photo.overlay}
+          intro={{ darkSource, clock, onReady: startIntro }}
+        />
       )}
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={[StyleSheet.absoluteFill, styles.center, { paddingBottom: wide ? 40 : 60, gap: wide ? 20 : 14 }]} pointerEvents="none">
-          <Wordmark size={wide ? 64 : 40} tone="dark" />
-          <T tone="dark" color="inkSecondary" style={wide ? { fontSize: 19, lineHeight: 26 } : undefined}>
-            5 nights free. 5 days out.
-          </T>
+          <TypedWordmark size={wide ? 64 : 40} clock={clock} />
+          <Animated.View style={taglineStyle}>
+            <T tone="dark" color="inkSecondary" style={wide ? { fontSize: 19, lineHeight: 26 } : undefined}>
+              5 nights free. 5 days out.
+            </T>
+          </Animated.View>
         </View>
 
         {wide ? (
           <>
-            <View style={{ position: 'absolute', left: 0, right: 0, bottom: 120, alignItems: 'center' }}>
+            <Animated.View style={[{ position: 'absolute', left: 0, right: 0, bottom: 120, alignItems: 'center' }, fieldStyle]}>
               <View style={{ width: 400 }}>{field}</View>
-            </View>
-            <View style={{ position: 'absolute', left: 0, right: 0, bottom: 36, alignItems: 'center' }}>{privacy}</View>
+            </Animated.View>
+            <Animated.View style={[{ position: 'absolute', left: 0, right: 0, bottom: 36, alignItems: 'center' }, fieldStyle]}>{privacy}</Animated.View>
           </>
         ) : (
-          <View style={{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: 24, paddingBottom: Math.max(insets.bottom, 16) + 24, gap: 22 }}>
+          <Animated.View style={[{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: 24, paddingBottom: Math.max(insets.bottom, 16) + 24, gap: 22 }, fieldStyle]}>
             {field}
             <View style={{ alignItems: 'center' }}>{privacy}</View>
-          </View>
+          </Animated.View>
         )}
       </KeyboardAvoidingView>
+      {playing ? (
+        // Invisible: a tap anywhere during the intro jumps to the end.
+        <Pressable accessibilityLabel="Skip intro" onPress={skip} style={StyleSheet.absoluteFill} />
+      ) : null}
     </View>
   );
 }
