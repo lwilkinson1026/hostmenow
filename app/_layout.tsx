@@ -45,6 +45,7 @@ export default function RootLayout() {
             <Stack.Screen name="onboarding" options={{ animation: 'fade', contentStyle: { backgroundColor: colors.dark.bg } }} />
             <Stack.Screen name="(tabs)" options={{ animation: 'fade', animationDuration: 500, gestureEnabled: false }} />
             <Stack.Screen name="host" options={{ contentStyle: { backgroundColor: '#FAFAF9' } }} />
+            <Stack.Screen name="confirmed/[id]" options={{ gestureEnabled: false, animation: 'fade' }} />
             <Stack.Screen name="id-failed" options={{ animation: 'fade', contentStyle: { backgroundColor: colors.dark.bg } }} />
           </Stack>
         </BottomSheetModalProvider>

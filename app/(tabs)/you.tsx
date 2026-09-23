@@ -8,9 +8,10 @@ import { Icon } from '@/components/Icon';
 import { T } from '@/components/Text';
 import { VideoTile } from '@/components/VideoTile';
 import { member } from '@/data/mock';
-import { monthYear, plural } from '@/lib/dates';
+import { MEMBERSHIP_MONTHLY } from '@/config';
+import { monthDay, monthYear, nextMonthly, plural } from '@/lib/dates';
 import { auth, haptics } from '@/services';
-import { useApp, useFreeNights } from '@/store/app';
+import { useApp, useBankedNights } from '@/store/app';
 import { colors, radius } from '@/theme';
 
 type RowProps = { label: string; value?: string; href?: Href; onPress?: () => void; first?: boolean; chevron?: boolean };
@@ -36,7 +37,7 @@ function Row({ label, value, href, onPress, first, chevron = true }: RowProps) {
 /** I. You. */
 export default function You() {
   const insets = useInsets();
-  const nights = useFreeNights();
+  const nights = useBankedNights();
   const { invitesLeft, membership, signOut } = useApp();
 
   const doSignOut = async () => {
@@ -79,7 +80,7 @@ export default function You() {
           <Row label="Invites" value={`${invitesLeft} left`} href="/invites" />
           <Row
             label="Membership"
-            value={membership === 'paused' ? 'Paused' : `$${member.membership.firstYear} · renews ${monthYear(member.membership.renews)}`}
+            value={membership === 'paused' ? 'Paused' : `$${MEMBERSHIP_MONTHLY} a month · renews ${monthDay(nextMonthly(member.joined))}`}
             onPress={membership === 'paused' ? () => router.push({ pathname: '/onboarding/pay', params: { mode: 'resume' } }) : undefined}
             chevron
           />

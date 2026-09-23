@@ -5,7 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { PayButton, TextButton } from '@/components/Buttons';
 import { OnboardingScreen, useTitleTop } from '@/components/Onboarding';
 import { T } from '@/components/Text';
-import { member } from '@/data/mock';
+import { MEMBERSHIP_MONTHLY } from '@/config';
 import { haptics, payments } from '@/services';
 import type { PayMethod } from '@/services/payments';
 import { useApp } from '@/store/app';
@@ -46,10 +46,10 @@ export default function Pay() {
       <T variant="title" tone="dark" style={{ marginTop: top }}>Your membership.</T>
       <View style={{ marginTop: 38, gap: 6 }}>
         <T tone="dark" style={{ fontSize: 72, lineHeight: 76, letterSpacing: -2.16 }} variant="bodyStrong">
-          ${member.membership.firstYear}
+          ${MEMBERSHIP_MONTHLY}
         </T>
         <T variant="callout" tone="dark" color="inkSecondary">
-          First year. Then ${member.membership.monthlyAfter} a month. Cancel anytime.
+          a month. Cancel anytime.
         </T>
       </View>
       <View style={{ marginTop: 38, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.dark.line }}>

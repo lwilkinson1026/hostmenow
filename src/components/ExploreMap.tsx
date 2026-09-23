@@ -17,7 +17,7 @@ const grayscale = [
   { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#E4E4E1' }] },
 ];
 
-export function ExploreMap({ listings, free, selectedId, onSelect }: ExploreMapProps) {
+export function ExploreMap({ listings, free, selectedId, onSelect, isOpen }: ExploreMapProps) {
   const region = useMemo(() => {
     const lats = listings.map((l) => l.coords.lat);
     const lngs = listings.map((l) => l.coords.lng);
@@ -49,7 +49,7 @@ export function ExploreMap({ listings, free, selectedId, onSelect }: ExploreMapP
     >
       {listings.map((l) => (
         <Marker
-          key={`${l.id}-${selectedId === l.id}-${free}`}
+          key={`${l.id}-${selectedId === l.id}-${free}-${[1, 2, 3, 4, 5].map((d) => (isOpen(l, d) ? 1 : 0)).join('')}`}
           coordinate={{ latitude: l.coords.lat, longitude: l.coords.lng }}
           onPress={(e) => {
             e.stopPropagation?.();
@@ -59,7 +59,7 @@ export function ExploreMap({ listings, free, selectedId, onSelect }: ExploreMapP
           zIndex={selectedId === l.id ? 2 : 1}
           tracksViewChanges={false}
         >
-          <PricePill label={pillLabel(l, free)} selected={selectedId === l.id} />
+          <PricePill label={pillLabel(l, free)} selected={selectedId === l.id} isOpen={(d) => isOpen(l, d)} />
         </Marker>
       ))}
     </MapView>

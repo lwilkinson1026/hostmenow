@@ -17,7 +17,7 @@ import { getListing } from '@/data/mock';
 import { addDays, fromISODate, longDay, longRange, plural } from '@/lib/dates';
 import { money } from '@/lib/pricing';
 import { haptics } from '@/services';
-import { useApp } from '@/store/app';
+import { freeNightsRefundable, useApp } from '@/store/app';
 import { colors, radius } from '@/theme';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -38,12 +38,12 @@ function Pair({ k, v }: { k: string; v: string }) {
   );
 }
 
-function confirm(message: string, action: string, onYes: () => void) {
+function confirm(title: string, detail: string | undefined, action: string, onYes: () => void) {
   if (Platform.OS === 'web') {
-    if (window.confirm(message)) onYes();
+    if (window.confirm(detail ? `${title}\n\n${detail}` : title)) onYes();
     return;
   }
-  Alert.alert(message, undefined, [
+  Alert.alert(title, detail, [
     { text: 'Keep trip', style: 'cancel' },
     { text: action, style: 'destructive', onPress: onYes },
   ]);
@@ -67,6 +67,14 @@ export default function Trip() {
   const revealed = now >= reveal.getTime();
   const cover = listing.photos[0];
   const p = booking.price;
+
+  const cancelDetail = () => {
+    if (p.free === 0) return undefined;
+    const n = plural(p.free, 'free night');
+    return freeNightsRefundable(booking)
+      ? `Your ${n} ${p.free === 1 ? 'goes' : 'go'} back to your bank.`
+      : `It's less than 24 hours to check-in, so your ${n} won't come back.`;
+  };
 
   const back = () => (router.canGoBack() ? router.back() : router.replace('/trips'));
 
@@ -144,7 +152,7 @@ export default function Trip() {
               label="Cancel trip"
               color="danger"
               onPress={() =>
-                confirm(`Cancel your trip to ${listing.name}?`, 'Cancel trip', () => {
+                confirm(`Cancel your trip to ${listing.name}?`, cancelDetail(), 'Cancel trip', () => {
                   cancelBooking(booking.id);
                   router.replace('/trips');
                 })

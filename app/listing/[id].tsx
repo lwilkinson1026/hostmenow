@@ -25,11 +25,13 @@ import { colors, radius } from '@/theme';
 function Carousel({ listing, height }: { listing: Listing; height: number }) {
   const [w, setW] = useState(0);
   const [page, setPage] = useState(0);
+  const scroller = useRef<ScrollView>(null);
   const n = listing.photos.length;
   return (
     <View style={{ height }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
       {w > 0 ? (
         <ScrollView
+          ref={scroller}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
@@ -52,7 +54,15 @@ function Carousel({ listing, height }: { listing: Listing; height: number }) {
       {n > 1 ? (
         <View accessibilityLabel={`Photo ${page + 1} of ${n}`} style={styles.dots}>
           {listing.photos.map((p, i) => (
-            <View key={p.alt} style={[styles.dot, { backgroundColor: i === page ? '#FFFFFF' : 'rgba(255,255,255,0.5)' }]} />
+            <Pressable
+              key={p.alt}
+              accessibilityRole="button"
+              accessibilityLabel={`Photo ${i + 1}`}
+              hitSlop={8}
+              onPress={() => scroller.current?.scrollTo({ x: i * w, animated: true })}
+            >
+              <View style={[styles.dot, { backgroundColor: i === page ? '#FFFFFF' : 'rgba(255,255,255,0.5)' }]} />
+            </Pressable>
           ))}
         </View>
       ) : null}

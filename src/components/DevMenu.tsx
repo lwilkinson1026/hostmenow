@@ -2,7 +2,8 @@ import { router } from 'expo-router';
 import { forwardRef } from 'react';
 import { StyleSheet, Switch, View } from 'react-native';
 
-import { useApp, useFreeNights } from '@/store/app';
+import { FREE_NIGHTS_UNLOCK_PREVIEW_DAYS } from '@/config';
+import { freeNightsOf, useApp } from '@/store/app';
 import { colors } from '@/theme';
 import { Segmented } from './Segmented';
 import { Sheet, type SheetRef } from './Sheet';
@@ -21,8 +22,8 @@ const track = { true: colors.light.ink, false: colors.light.line };
 
 /** Hidden: long-press the wordmark on Explore. Switches mock states. */
 export const DevMenu = forwardRef<SheetRef, { onClose: () => void }>(function DevMenu({ onClose }, ref) {
-  const nights = useFreeNights();
   const s = useApp();
+  const nights = freeNightsOf(s.nightGrants);
   return (
     <Sheet ref={ref}>
       <T variant="heading" style={{ marginBottom: 4 }}>Prototype states</T>
@@ -33,6 +34,15 @@ export const DevMenu = forwardRef<SheetRef, { onClose: () => void }>(function De
           options={[{ value: '5', label: '5' }, { value: '0', label: '0' }]}
           value={nights > 0 ? '5' : '0'}
           onChange={(v) => s.setFreeNights(v === '5' ? 5 : 0)}
+        />
+      </Row>
+      <Row label={`Free nights locked ${FREE_NIGHTS_UNLOCK_PREVIEW_DAYS} days`}>
+        <Switch
+          trackColor={track}
+          thumbColor="#FFFFFF"
+          {...({ activeThumbColor: '#FFFFFF' } as object)}
+          value={s.unlockDays > 0}
+          onValueChange={(v) => s.setUnlockDays(v ? FREE_NIGHTS_UNLOCK_PREVIEW_DAYS : 0)}
         />
       </Row>
       <Row label="Membership paused">

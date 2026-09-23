@@ -20,7 +20,7 @@ export type Listing = {
   rulesSummary: string;
   rules: string[];
   street: string;
-  /** Day offsets from today (1..5) when the home is not open. */
+  /** Day offsets from today (1..10) when the home is blocked. Source of truth is Hostshare availability. */
   closedDays: number[];
 };
 
@@ -54,7 +54,7 @@ export const listings: Listing[] = [
     rulesSummary: 'Check-in after 4 PM · Checkout by 11 AM · No pets',
     rules: standardRules,
     street: 'Cedar Ridge Rd',
-    closedDays: [],
+    closedDays: [7],
   },
   {
     id: 'lake-cabin-pend-oreille', name: 'Lake Cabin on Pend Oreille', region: 'Sandpoint, ID',
@@ -74,7 +74,7 @@ export const listings: Listing[] = [
     rulesSummary: 'Check-in after 4 PM · Checkout by 11 AM · No pets',
     rules: standardRules,
     street: 'Lakeshore Dr',
-    closedDays: [5],
+    closedDays: [4, 5, 8],
   },
   {
     id: 'desert-modern', name: 'Desert Modern', region: 'Joshua Tree, CA',
@@ -94,7 +94,7 @@ export const listings: Listing[] = [
     rulesSummary: 'Check-in after 4 PM · Checkout by 11 AM · No pets',
     rules: standardRules,
     street: 'Boulder Wash Rd',
-    closedDays: [],
+    closedDays: [2, 3],
   },
   {
     id: 'orchard-house', name: 'Orchard House', region: 'Yakima, WA',
@@ -114,7 +114,7 @@ export const listings: Listing[] = [
     rulesSummary: 'Check-in after 4 PM · Checkout by 11 AM · No pets',
     rules: standardRules,
     street: 'Orchard Ln',
-    closedDays: [],
+    closedDays: [5, 6],
   },
   {
     id: 'coast-loft', name: 'Coast Loft', region: 'Cannon Beach, OR',
@@ -134,7 +134,7 @@ export const listings: Listing[] = [
     rulesSummary: 'Check-in after 4 PM · Checkout by 11 AM · No pets',
     rules: standardRules,
     street: 'Hemlock St',
-    closedDays: [],
+    closedDays: [1, 9],
   },
   {
     id: 'ski-chalet', name: 'Ski Chalet', region: 'Whitefish, MT',
@@ -154,11 +154,14 @@ export const listings: Listing[] = [
     rulesSummary: 'Check-in after 4 PM · Checkout by 11 AM · No pets',
     rules: standardRules,
     street: 'Big Mountain Rd',
-    closedDays: [],
+    closedDays: [3, 4, 5],
   },
 ];
 
 export const getListing = (id: string) => listings.find((l) => l.id === id);
+
+/** Is the home open on the night that is `day` days from today? */
+export const isOpenOn = (l: Listing, day: number) => !l.closedDays.includes(day);
 
 export type NightGrant = { nights: number; used: number; granted: string; expires: string };
 
@@ -168,7 +171,7 @@ export const member = {
   memberSince: '2026-09',
   invitedBy: { name: 'Sarah Chen', initials: 'SC' },
   invitesLeft: 3,
-  membership: { firstYear: 99, monthlyAfter: 20, renews: '2027-09-23' },
+  joined: '2026-09-23',
   nightGrants: [{ nights: 5, used: 0, granted: '2026-09-23', expires: '2031-09-23' }] as NightGrant[],
 };
 

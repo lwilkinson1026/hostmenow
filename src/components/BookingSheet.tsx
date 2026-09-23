@@ -1,42 +1,58 @@
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Switch, View } from 'react-native';
 
 import type { Listing } from '@/data/mock';
-import { addDays, plural, shortDay, toISODate, today } from '@/lib/dates';
+import { addDays, fullDate, longDay, plural, shortDay, toISODate, today } from '@/lib/dates';
 import { money, priceStay } from '@/lib/pricing';
+import { nightsIn, rangeOpen, type Range, type RangeRules } from '@/lib/range';
 import { haptics, payments } from '@/services';
-import { useApp, useFreeNights, type Booking } from '@/store/app';
+import { freeNightsOf, unlockDate, useApp, useFreeNights, useIsOpen, type Booking } from '@/store/app';
 import { colors } from '@/theme';
 import { PayButton } from './Buttons';
-import { DateChips } from './DateChips';
+import { RangeChips } from './RangeChips';
 import { LineItem } from './Rows';
 import { Sheet, type SheetRef } from './Sheet';
 import { Stepper } from './Stepper';
 import { T } from './Text';
 
 const MAX_NIGHTS = 7;
+const DAYS_SHOWN = 10;
 
 type Props = { listing: Listing; onBooked: (b: Booking) => void };
 
-/** E. Book. Check-in chips, nights and guests, the breakdown, Apple Pay. */
+/** E. Book. Tap the first and last night, guests, the breakdown, Apple Pay. */
 export const BookingSheet = forwardRef<SheetRef, Props>(function BookingSheet({ listing, onBooked }, ref) {
-  const bank = useFreeNights();
-  const { arrivalOffset, book } = useApp();
-  const firstOpen = [arrivalOffset, 1, 2, 3, 4, 5].find((d) => !listing.closedDays.includes(d)) ?? 1;
-  const [checkIn, setCheckIn] = useState(firstOpen);
-  const [nights, setNights] = useState(3);
+  const usable = useFreeNights();
+  const { range: exploreRange, book, nightGrants, unlockDays } = useApp();
+  const banked = freeNightsOf(nightGrants);
+  const isOpenFor = useIsOpen();
+  const isOpen = (d: number) => isOpenFor(listing, d);
+  const rules: RangeRules = { maxStart: 5, maxNights: MAX_NIGHTS, isOpen };
+
+  // Start from the nights chosen on Explore when they work here, else the first open night.
+  const initial = useMemo<Range | null>(() => {
+    if (exploreRange && rangeOpen(exploreRange, isOpen)) return exploreRange;
+    const first = [1, 2, 3, 4, 5].find(isOpen);
+    return first ? { start: first, end: first } : null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exploreRange, listing.id, isOpenFor]);
+
+  const [range, setRange] = useState<Range | null>(initial);
   const [guests, setGuests] = useState(Math.min(2, listing.guests));
   const [useFree, setUseFree] = useState(true);
   const [paying, setPaying] = useState(false);
 
-  useEffect(() => setCheckIn(firstOpen), [firstOpen]);
+  useEffect(() => setRange(initial), [initial]);
 
-  const price = priceStay(listing, nights, bank, useFree);
-  const inDate = addDays(today(), checkIn);
-  const outDate = addDays(inDate, nights);
+  const nights = range ? nightsIn(range) : 0;
+  const price = priceStay(listing, Math.max(nights, 1), usable, useFree);
+  const inDate = range ? addDays(today(), range.start) : null;
+  const outDate = range ? addDays(today(), range.end + 1) : null;
+  const locked = banked > 0 && usable === 0;
+  const firstUnlock = nightGrants.map((g) => unlockDate(g, unlockDays)).find((d) => d.getTime() > today().getTime());
 
   const pay = async () => {
-    if (paying) return;
+    if (paying || !range || !inDate) return;
     setPaying(true);
     await payments.payStay(price.total, 'apple_pay');
     haptics.success();
@@ -47,12 +63,20 @@ export const BookingSheet = forwardRef<SheetRef, Props>(function BookingSheet({ 
 
   return (
     <Sheet ref={ref} dismissible={!paying}>
-      <T variant="heading" style={{ marginBottom: 16 }}>Your stay</T>
-      <T variant="caption" color="inkSecondary" style={{ marginBottom: 8 }}>Check-in</T>
-      <DateChips selected={checkIn} onSelect={setCheckIn} unavailable={listing.closedDays} />
+      <T variant="heading" style={{ marginBottom: 4 }}>Your stay</T>
+      <T variant="caption" color="inkSecondary" style={{ marginBottom: 12 }}>
+        {range && inDate && outDate
+          ? `${longDay(inDate)} to ${longDay(outDate)} · ${plural(nights, 'night')}`
+          : 'Tap your first night, then your last.'}
+      </T>
+      <RangeChips days={DAYS_SHOWN} value={range} onChange={setRange} rules={rules} />
+      {range && range.start === range.end ? (
+        <T variant="caption" color="inkSecondary" style={{ marginTop: 8 }}>
+          Out {shortDay(outDate!)}. Tap a later day to stay longer.
+        </T>
+      ) : null}
 
       <View style={{ marginTop: 12 }}>
-        <Stepper label="Nights" caption={`Out ${shortDay(outDate)}`} noun="nights" value={nights} min={1} max={MAX_NIGHTS} onChange={setNights} />
         <Stepper label="Guests" noun="guests" value={guests} min={1} max={listing.guests} onChange={setGuests} />
       </View>
 
@@ -64,9 +88,9 @@ export const BookingSheet = forwardRef<SheetRef, Props>(function BookingSheet({ 
         <LineItem strong label="Total" value={money(price.total)} />
       </View>
 
-      {bank > 0 ? (
+      {usable > 0 ? (
         <View style={{ marginTop: 8, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <T nativeID="use-free-label">Use free nights</T>
+          <T>Use free nights</T>
           <Switch
             accessibilityLabel="Use free nights"
             value={useFree}
@@ -79,9 +103,13 @@ export const BookingSheet = forwardRef<SheetRef, Props>(function BookingSheet({ 
             {...({ activeThumbColor: '#FFFFFF' } as object)}
           />
         </View>
+      ) : locked && firstUnlock ? (
+        <T variant="caption" color="inkSecondary" style={{ marginTop: 12 }}>
+          Your free nights unlock {fullDate(toISODate(firstUnlock))}.
+        </T>
       ) : null}
 
-      <PayButton style={{ marginTop: 24 }} loading={paying} onPress={pay} />
+      <PayButton style={{ marginTop: 24 }} loading={paying} disabled={!range} onPress={pay} />
     </Sheet>
   );
 });

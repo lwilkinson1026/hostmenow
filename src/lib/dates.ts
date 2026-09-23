@@ -15,10 +15,10 @@ export function addDays(d: Date, n: number): Date {
   return out;
 }
 
-/** The booking window: today +1 through today +5. */
-export function windowDays(): { offset: number; date: Date; weekday: string; day: string }[] {
+/** Days from today +1. The booking window (check-in) is the first 5. */
+export function windowDays(count = 5): { offset: number; date: Date; weekday: string; day: string }[] {
   const t = today();
-  return [1, 2, 3, 4, 5].map((offset) => {
+  return Array.from({ length: count }, (_, i) => i + 1).map((offset) => {
     const date = addDays(t, offset);
     return { offset, date, weekday: WEEKDAYS[date.getDay()], day: String(date.getDate()) };
   });
@@ -64,3 +64,11 @@ export function monthYear(iso: string): string {
 export const monthDay = (d: Date) => `${MONTHS[d.getMonth()]} ${d.getDate()}`;
 
 export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
+/** Next monthly renewal on the same day of the month as `startIso`, after today. */
+export function nextMonthly(startIso: string, from: Date = today()): Date {
+  const day = fromISODate(startIso).getDate();
+  const d = new Date(from.getFullYear(), from.getMonth(), day);
+  if (d.getTime() <= from.getTime()) d.setMonth(d.getMonth() + 1);
+  return d;
+}

@@ -4,15 +4,15 @@ import { useInsets } from '@/lib/insets';
 
 import { NavHeader } from '@/components/NavHeader';
 import { T } from '@/components/Text';
-import { fullDate, plural } from '@/lib/dates';
-import { useApp, useFreeNights } from '@/store/app';
+import { fullDate, plural, toISODate, today } from '@/lib/dates';
+import { unlockDate, useApp, useBankedNights } from '@/store/app';
 import { colors } from '@/theme';
 
 /** J. Nights bank. */
 export default function Nights() {
   const insets = useInsets();
-  const bank = useFreeNights();
-  const grants = useApp((s) => s.nightGrants);
+  const bank = useBankedNights();
+  const { nightGrants: grants, unlockDays, membership } = useApp();
   return (
     <View style={{ flex: 1, backgroundColor: colors.light.bg, paddingTop: insets.top - 5, paddingHorizontal: 24 }}>
       <StatusBar style="dark" />
@@ -30,11 +30,16 @@ export default function Nights() {
             <T variant="callout" color="inkSecondary">
               Granted {fullDate(g.granted)} · Expires {fullDate(g.expires)}
             </T>
+            {unlockDate(g, unlockDays).getTime() > today().getTime() && g.used < g.nights ? (
+              <T variant="caption" color="accent">Unlocks {fullDate(toISODate(unlockDate(g, unlockDays)))}</T>
+            ) : null}
           </View>
         ))}
       </View>
       <T variant="caption" color="inkSecondary" style={{ marginTop: 20 }}>
-        Free nights are used oldest first. You get 5 more every year.
+        {membership === 'paused'
+          ? 'Your nights are frozen while your membership is paused. They still expire on schedule.'
+          : 'Free nights are used oldest first. You get 5 more every year.'}
       </T>
     </View>
   );

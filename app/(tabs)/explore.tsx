@@ -4,7 +4,6 @@ import { useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useInsets } from '@/lib/insets';
 
-import { DateChips } from '@/components/DateChips';
 import { DevMenu } from '@/components/DevMenu';
 import { ExploreMap } from '@/components/ExploreMap';
 import { Icon } from '@/components/Icon';
@@ -12,21 +11,24 @@ import { ListingCard } from '@/components/ListingCard';
 import { MapCard } from '@/components/MapCard';
 import { NightsPill } from '@/components/NightsPill';
 import { PressScale } from '@/components/PressScale';
+import { RangeChips } from '@/components/RangeChips';
 import { Segmented } from '@/components/Segmented';
 import type { SheetRef } from '@/components/Sheet';
 import { T, Wordmark } from '@/components/Text';
 import { listings } from '@/data/mock';
-import { plural } from '@/lib/dates';
+import { addDays, plural, shortDay, today } from '@/lib/dates';
+import { nightsIn, rangeOpen } from '@/lib/range';
 import { haptics } from '@/services';
-import { useApp, useFreeNights } from '@/store/app';
+import { useApp, useBankedNights, useFreeNights, useIsOpen } from '@/store/app';
 import { colors, radius, type } from '@/theme';
 
 /** C. Explore: list and map, with empty and paused states. */
 export default function Explore() {
   const insets = useInsets();
-  const nights = useFreeNights();
-  const free = nights > 0;
-  const { arrivalOffset, setArrivalOffset, exploreEmpty, membership } = useApp();
+  const nights = useBankedNights();
+  const free = useFreeNights() > 0;
+  const isOpen = useIsOpen();
+  const { range, setRange, exploreEmpty, membership } = useApp();
   const [view, setView] = useState<'list' | 'map'>('list');
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(listings[0].id);
@@ -35,10 +37,11 @@ export default function Explore() {
   const open = useMemo(() => {
     if (exploreEmpty) return [];
     const q = query.trim().toLowerCase();
-    return listings.filter(
-      (l) => !l.closedDays.includes(arrivalOffset) && (!q || l.name.toLowerCase().includes(q) || l.region.toLowerCase().includes(q)),
-    );
-  }, [exploreEmpty, query, arrivalOffset]);
+    return listings.filter((l) => {
+      const open = range ? rangeOpen(range, (d) => isOpen(l, d)) : [1, 2, 3, 4, 5].some((d) => isOpen(l, d));
+      return open && (!q || l.name.toLowerCase().includes(q) || l.region.toLowerCase().includes(q));
+    });
+  }, [exploreEmpty, query, range, isOpen]);
 
   const selected = open.find((l) => l.id === selectedId) ?? null;
   const openListing = (id: string) => router.push({ pathname: '/listing/[id]', params: { id } });
@@ -93,10 +96,17 @@ export default function Explore() {
         />
       </View>
 
-      <DateChips selected={arrivalOffset} onSelect={setArrivalOffset} />
+      <RangeChips value={range} onChange={setRange} rules={{ maxStart: 5, maxNights: 5, isOpen: () => true, allowClear: true }} />
 
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <T variant="callout" color="inkSecondary">{open.length ? `${plural(open.length, 'home')} open` : 'Nothing open'}</T>
+        <View style={{ flexShrink: 1 }}>
+          <T variant="callout" color="inkSecondary">{open.length ? `${plural(open.length, 'home')} open` : 'Nothing open'}</T>
+          {range ? (
+            <T variant="caption" color="inkSecondary">
+              {plural(nightsIn(range), 'night')} · out {shortDay(addDays(today(), range.end + 1))}
+            </T>
+          ) : null}
+        </View>
         <Segmented
           options={[
             { value: 'list', label: 'List' },
@@ -111,8 +121,17 @@ export default function Explore() {
 
   const empty = (
     <View style={{ paddingTop: 120, paddingHorizontal: 16, gap: 8 }}>
-      <T variant="heading" align="center">Nothing open nearby in the next 5 days.</T>
-      <T color="inkSecondary" align="center">Check back tomorrow, homes open up daily.</T>
+      {range && !exploreEmpty ? (
+        <>
+          <T variant="heading" align="center">Nothing open for those nights.</T>
+          <T color="inkSecondary" align="center">Try a shorter stay or other days.</T>
+        </>
+      ) : (
+        <>
+          <T variant="heading" align="center">Nothing open nearby in the next 5 days.</T>
+          <T color="inkSecondary" align="center">Check back tomorrow, homes open up daily.</T>
+        </>
+      )}
     </View>
   );
 
@@ -144,10 +163,10 @@ export default function Explore() {
             <View style={{ paddingHorizontal: 24 }}>{empty}</View>
           ) : (
             <View style={{ flex: 1 }}>
-              <ExploreMap listings={open} free={free} selectedId={selected?.id ?? null} onSelect={setSelectedId} />
+              <ExploreMap listings={open} free={free} selectedId={selected?.id ?? null} onSelect={setSelectedId} isOpen={isOpen} />
               {selected ? (
                 <View style={{ position: 'absolute', left: 16, right: 16, bottom: 16 }}>
-                  <MapCard listing={selected} free={free} onPress={() => openListing(selected.id)} />
+                  <MapCard listing={selected} free={free} isOpen={(d) => isOpen(selected, d)} onPress={() => openListing(selected.id)} />
                 </View>
               ) : null}
             </View>

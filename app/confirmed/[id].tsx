@@ -9,7 +9,7 @@ import { NightsPillChange } from '@/components/NightsPill';
 import { T } from '@/components/Text';
 import { getListing } from '@/data/mock';
 import { addDays, fromISODate, longRange } from '@/lib/dates';
-import { useApp, useFreeNights } from '@/store/app';
+import { useApp, useBankedNights } from '@/store/app';
 import { colors, radius } from '@/theme';
 
 /** F. Booking confirmed. The nights pill settles on the new count. */
@@ -17,7 +17,7 @@ export default function Confirmed() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useInsets();
   const booking = useApp((s) => s.bookings.find((b) => b.id === id));
-  const bank = useFreeNights();
+  const bank = useBankedNights();
   const listing = booking && getListing(booking.listingId);
   if (!booking || !listing) return null;
 
@@ -44,7 +44,14 @@ export default function Confirmed() {
       </View>
       <View style={{ flex: 1 }} />
       <View style={{ gap: 4, paddingBottom: Math.max(insets.bottom, 16) }}>
-        <PrimaryButton label="View trip" onPress={() => router.replace({ pathname: '/trip/[id]', params: { id: booking.id } })} />
+        <PrimaryButton
+          label="View trip"
+          onPress={() => {
+            // Land the trip on top of Trips, so back goes where people expect.
+            router.dismissTo('/trips');
+            router.push({ pathname: '/trip/[id]', params: { id: booking.id } });
+          }}
+        />
         <TextButton label="Back to explore" onPress={() => router.dismissTo('/explore')} />
       </View>
     </View>
