@@ -1,5 +1,3 @@
-import { Platform } from 'react-native';
-
 /**
  * The landing intro: the house's lights come on, the wordmark types itself,
  * then the tagline and invite field appear. Times in ms on one clock.
@@ -50,29 +48,16 @@ export const INTRO = {
   skip: 250,
 } as const;
 
-const KEY = 'hmn-intro-seen';
-let seenThisLaunch = false;
+let seenThisLoad = false;
 
-/** Plays once per visit on web (per tab), once per launch in the app. */
+/**
+ * Plays on every page load (web) or app launch (native). Moving around inside
+ * the site and coming back to the landing doesn't replay it.
+ */
 export function introSeen(): boolean {
-  if (seenThisLaunch) return true;
-  if (Platform.OS === 'web') {
-    try {
-      return window.sessionStorage.getItem(KEY) === '1';
-    } catch {
-      return false;
-    }
-  }
-  return false;
+  return seenThisLoad;
 }
 
 export function markIntroSeen() {
-  seenThisLaunch = true;
-  if (Platform.OS === 'web') {
-    try {
-      window.sessionStorage.setItem(KEY, '1');
-    } catch {
-      // Private mode or blocked storage: the in-memory flag still covers this page.
-    }
-  }
+  seenThisLoad = true;
 }
