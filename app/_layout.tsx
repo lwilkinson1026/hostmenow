@@ -31,7 +31,7 @@ const navTheme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background
  * on some versions, the top bar with theme-color), so these make the bars read as
  * part of the picture. Gradients don't work: Safari falls back to white.
  */
-const LANDING_EDGES = { top: '#3B4B61', bottom: '#27313D' }; // landing-mobile.jpg at 36%, 40% overlay
+const LANDING_EDGES = { top: '#333A46', bottom: '#1A2129' }; // landing.jpg at 51%, 40% overlay
 const LEARN_TOP = '#4F443B'; // cedar.jpg, 60% overlay
 
 /** The solid page color and theme color Safari shows around each screen on iPhone. */

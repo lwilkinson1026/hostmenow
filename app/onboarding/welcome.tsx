@@ -12,7 +12,7 @@ import { member } from '@/data/mock';
 export default function Welcome() {
   return (
     <OnboardingScreen
-      background={<DriftBackground source={require('../../assets/photos/landing-mobile.jpg')} cropX={36} />}
+      background={<DriftBackground source={require('../../assets/photos/landing.jpg')} cropX={51} />}
       contentStyle={{ justifyContent: 'center' }}
       actions={<PrimaryButton tone="dark" label="Continue" onPress={() => router.push('/onboarding/sign-in')} />}
     >

@@ -16,6 +16,8 @@ import { hasWebBackdrop, setBackdrop } from '@/lib/webChrome';
 import { colors, motion, radius, type } from '@/theme';
 
 const WIDE = 900;
+/** Phone crop of the landing photo: centered on the lit windows. */
+const LANDING_CROP_X = 51;
 
 /** A. Locked landing. Wordmark, pitch line, invite code. Nothing else. */
 export default function Landing() {
@@ -36,8 +38,8 @@ export default function Landing() {
       if (!hasWebBackdrop) return;
       setBackdrop(
         wide
-          ? { source: require('../assets/photos/landing-web.jpg'), overlay: motion.overlay.landingWeb }
-          : { source: require('../assets/photos/landing-mobile.jpg'), cropX: 36, overlay: motion.overlay.landingMobile },
+          ? { source: require('../assets/photos/landing.jpg'), overlay: motion.overlay.landingWeb }
+          : { source: require('../assets/photos/landing.jpg'), cropX: LANDING_CROP_X, overlay: motion.overlay.landingMobile },
       );
     }, [wide]),
   );
@@ -131,9 +133,9 @@ export default function Landing() {
     <View style={{ flex: 1, backgroundColor: hasWebBackdrop ? 'transparent' : colors.dark.bg }}>
       <StatusBar style="light" />
       {hasWebBackdrop ? null : wide ? (
-        <DriftBackground source={require('../assets/photos/landing-web.jpg')} overlay={motion.overlay.landingWeb} />
+        <DriftBackground source={require('../assets/photos/landing.jpg')} overlay={motion.overlay.landingWeb} />
       ) : (
-        <DriftBackground source={require('../assets/photos/landing-mobile.jpg')} cropX={36} overlay={motion.overlay.landingMobile} />
+        <DriftBackground source={require('../assets/photos/landing.jpg')} cropX={LANDING_CROP_X} overlay={motion.overlay.landingMobile} />
       )}
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>

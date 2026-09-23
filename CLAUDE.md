@@ -105,7 +105,7 @@ Build these as shared components before the screens. The `design-reference/Compo
 
 - Step transitions: horizontal push, 350ms, spring with high damping and no bounce.
 - Sheets rise from the bottom in 300ms.
-- Onboarding and landing backgrounds: one photo drifting slowly (Ken Burns, 20s, alternate) under a black overlay. Use 60% by default; the design uses about 40% on `landing-mobile.jpg` and 45% on `landing-web.jpg` because those photos are already dark.
+- Onboarding and landing backgrounds: one photo drifting slowly (Ken Burns, 20s, alternate) under a black overlay. Use 60% by default; the landing uses about 40% on phones and 45% on desktop on `landing.jpg` because the photo is already dark.
 - Invalid invite code: the field shakes once and the caption reads "That code isn't valid."
 - Confirmed screen: the nights pill animates from 5 to 3.
 - Nothing decorative.
@@ -114,8 +114,7 @@ Build these as shared components before the screens. The `design-reference/Compo
 
 | File | Used on | Crop (`contentPosition` x) |
 |---|---|---|
-| `landing-mobile.jpg` | A mobile landing, invalid state, B1 welcome | 36% |
-| `landing-web.jpg` | A web landing (1440) | center |
+| `landing.jpg` | A landing (mobile and web 1440), invalid state, B1 welcome. Replaced the original two landing photos on Sep 23, 2026. | 51% on phones, center on desktop |
 | `cedar.jpg` (4:5) | Cedar A-Frame cover, B7 background, confirmed, trip | center |
 | `cedar-living.jpg`, `cedar-loft.jpg`, `cedar-porch.jpg` | Cedar A-Frame gallery, photos 2 to 4 | 42%, 48%, 56% |
 | `lake.jpg` | Lake Cabin on Pend Oreille | 4% (cabin is at left) |
