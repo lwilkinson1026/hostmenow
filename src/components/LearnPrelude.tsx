@@ -6,10 +6,10 @@ import { colors, type } from '@/theme';
 import { DriftBackground } from './DriftBackground';
 
 /** ms per typed character, and the pause after a line finishes. */
-const CH = 26;
-const HOLD = 750;
-const BEAT = 420; // between "host", "me" and "now"
-const LETTER = 95;
+const CH = 32;
+const HOLD = 1050;
+const BEAT = 450; // between "host", "me" and "now"
+const LETTER = 100;
 
 const STORY = [
   'It started with hosts sharing their last-minute openings.',
@@ -31,11 +31,11 @@ function buildTimeline() {
     t = line.end + HOLD;
     return line;
   });
-  const storyOut = t + 400; // hold the full stack a moment, then clear
-  t = storyOut + 900;
+  const storyOut = t + 700; // hold the full stack a moment, then clear
+  t = storyOut + 1000;
 
   const lead = typed(LEAD, t);
-  t = lead.end + 450;
+  t = lead.end + 550;
 
   // The wordmark types in three beats, like the landing.
   const letterAt: number[] = [];
@@ -46,15 +46,15 @@ function buildTimeline() {
       t += LETTER;
     }
   });
-  t += 650;
+  t += 800;
 
   const close1 = typed(CLOSE[0], t);
-  t = close1.end + 650;
+  t = close1.end + 850;
   const close2 = typed(CLOSE[1], t);
   t = close2.end;
 
   const lightsOn = [close1.at, close1.at + 1400] as const;
-  const reveal = [t + 1700, t + 2500] as const;
+  const reveal = [t + 2000, t + 2900] as const;
   return { story, storyOut, lead, letterAt, close1, close2, lightsOn, reveal, end: reveal[1] };
 }
 
