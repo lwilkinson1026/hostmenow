@@ -40,10 +40,12 @@ export const INTRO = {
   typeStart: TYPE_START,
   letterStep: LETTER_STEP,
   caretEnd: TYPE_END + 700,
+  /** "5 nights free." then a pause, then "5 days out." */
   taglineAt: TYPE_END + 150,
-  fieldAt: TYPE_END + 450,
+  taglineSecondAt: TYPE_END + 150 + 700,
+  fieldAt: TYPE_END + 150 + 700 + 400,
   fade: 450,
-  total: TYPE_END + 450 + 450,
+  total: TYPE_END + 150 + 700 + 400 + 450,
   /** How fast a tap skips to the end. */
   skip: 250,
 } as const;

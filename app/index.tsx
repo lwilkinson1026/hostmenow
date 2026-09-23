@@ -88,11 +88,17 @@ export default function Landing() {
     }, [wide, startIntro]),
   );
 
-  const at = (from: number) => ({ opacity: interpolate(clock.value, [from, from + INTRO.fade], [0, 1], 'clamp') });
-  const taglineStyle = useAnimatedStyle(() => at(INTRO.taglineAt));
+  // Each style reads clock.value directly so the animation library tracks it (and it runs on the UI thread).
+  const { taglineAt, taglineSecondAt, fieldAt, fade } = INTRO;
+  const taglineStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(clock.value, [taglineAt, taglineAt + fade], [0, 1], 'clamp'),
+  }));
+  const taglineSecondStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(clock.value, [taglineSecondAt, taglineSecondAt + fade], [0, 1], 'clamp'),
+  }));
   const fieldStyle = useAnimatedStyle(() => ({
-    ...at(INTRO.fieldAt),
-    transform: [{ translateY: interpolate(clock.value, [INTRO.fieldAt, INTRO.fieldAt + INTRO.fade], [8, 0], 'clamp') }],
+    opacity: interpolate(clock.value, [fieldAt, fieldAt + fade], [0, 1], 'clamp'),
+    transform: [{ translateY: interpolate(clock.value, [fieldAt, fieldAt + fade], [8, 0], 'clamp') }],
   }));
 
   const x = useSharedValue(0);
@@ -195,11 +201,18 @@ export default function Landing() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={[StyleSheet.absoluteFill, styles.center, { paddingBottom: wide ? 40 : 60, gap: wide ? 20 : 14 }]} pointerEvents="none">
           <TypedWordmark size={wide ? 64 : 40} clock={clock} />
-          <Animated.View style={taglineStyle}>
-            <T tone="dark" color="inkSecondary" style={wide ? { fontSize: 19, lineHeight: 26 } : undefined}>
-              5 nights free. 5 days out.
-            </T>
-          </Animated.View>
+          <View accessible accessibilityLabel="5 nights free. 5 days out." style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: wide ? 6 : 5 }}>
+            <Animated.View style={taglineStyle}>
+              <T tone="dark" color="inkSecondary" style={wide ? { fontSize: 19, lineHeight: 26 } : undefined}>
+                5 nights free.
+              </T>
+            </Animated.View>
+            <Animated.View style={taglineSecondStyle}>
+              <T tone="dark" color="inkSecondary" style={wide ? { fontSize: 19, lineHeight: 26 } : undefined}>
+                5 days out.
+              </T>
+            </Animated.View>
+          </View>
         </View>
 
         {wide ? (
