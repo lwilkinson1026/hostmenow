@@ -1,0 +1,15 @@
+import { tapDay, isTappable } from '../src/lib/range.ts';
+const rules = { maxStart: 5, maxNights: 7, isOpen: (d: number) => d !== 4 };
+const eq = (a: unknown, b: unknown, m: string) => { const ok = JSON.stringify(a) === JSON.stringify(b); console.log(ok ? 'ok  ' : 'FAIL', m, JSON.stringify(a)); };
+let r = tapDay(null, 1, rules); eq(r, { start: 1, end: 1 }, 'first tap');
+r = tapDay(r, 3, rules); eq(r, { start: 1, end: 3 }, 'second tap fills');
+eq(tapDay(r, 2, rules), { start: 2, end: 2 }, 'third tap restarts');
+eq(tapDay({ start: 1, end: 1 }, 5, rules), { start: 5, end: 5 }, 'blocked between restarts');
+eq(tapDay({ start: 5, end: 5 }, 8, rules), { start: 5, end: 8 }, 'extend past window');
+eq(tapDay({ start: 5, end: 6 }, 9, rules), { start: 5, end: 9 }, 'past window always extends');
+eq(tapDay(null, 7, rules), null, 'cannot start past window');
+eq(tapDay({ start: 1, end: 1 }, 1, { ...rules, allowClear: true }), null, 'clear');
+eq(tapDay({ start: 1, end: 1 }, 1, rules), { start: 1, end: 1 }, 'no clear in booking');
+eq(tapDay({ start: 5, end: 5 }, 12, rules), { start: 5, end: 5 }, 'max nights');
+eq(isTappable({ start: 1, end: 3 }, 6, rules), false, 'day 6 blocked by closed 4');
+eq(isTappable({ start: 5, end: 5 }, 6, rules), true, 'day 6 extends from 5');

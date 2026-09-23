@@ -21,6 +21,7 @@ export default function HostLayout() {
       <Stack.Screen name="payouts" />
       <Stack.Screen name="terms" />
       <Stack.Screen name="live" options={{ gestureEnabled: false }} />
+      <Stack.Screen name="terms-full" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }

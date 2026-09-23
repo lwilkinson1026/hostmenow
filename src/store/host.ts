@@ -68,3 +68,8 @@ export function listingEstimate(id: string, mode: OptInMode) {
 }
 
 export const invitesLeft = (s: Pick<State, 'invited' | 'linksShared'>) => Math.max(0, host.invites - s.invited.length - s.linksShared);
+
+// Dev only: lets the web preview jump straight into a state while testing.
+if (__DEV__ && typeof window !== 'undefined') {
+  (window as unknown as { __host: typeof useHost }).__host = useHost;
+}

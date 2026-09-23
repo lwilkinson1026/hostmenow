@@ -12,6 +12,7 @@ const points: { icon: HostIconName; title: string; body: string }[] = [
   { icon: 'split', title: 'Half-price stays', body: 'Members pay 50% of your rate. You keep 88%.' },
   { icon: 'coins', title: 'A share of every membership', body: 'Paid to you each quarter for the members you host and the nights you open.' },
   { icon: 'calendar-check', title: 'Only last-minute nights', body: 'Members book within 5 days of arrival, after your regular guests have had their chance.' },
+  { icon: 'sharing', title: 'Counts toward your sharing', body: 'Free member stays count toward the nights you share on Hostshare.' },
 ];
 
 /** 2. The estimate and three value points. */

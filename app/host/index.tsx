@@ -6,10 +6,11 @@ import { HostIcon, type HostIconName } from '@/components/host/HostIcon';
 import { hs, money0 } from '@/components/host/HostUI';
 import { PressScale } from '@/components/PressScale';
 import { T } from '@/components/Text';
-import { host, hostListings, quarter } from '@/data/host';
+import { host, hostListings, memberStayEvents, notices, quarter } from '@/data/host';
 import { monthDay, plural } from '@/lib/dates';
 import { useInsets } from '@/lib/insets';
 import { nextPoolPayout, roundTo } from '@/lib/pool';
+import { covered, fmtNights, replay } from '@/lib/shareLedger';
 import { haptics } from '@/services';
 import { invitesLeft, listingEstimate, useHost } from '@/store/host';
 
@@ -59,6 +60,11 @@ function InviteCard() {
   );
 }
 
+/** Share-night credits from member stays, from the reservation events Hostshare receives. */
+const ledger = replay(memberStayEvents);
+/** Completed member stays with at least one free night. */
+const freeStays = new Set(Object.values(ledger).filter((c) => c.status === 'final').map((c) => c.bookingId)).size;
+
 /** After opt-in: this quarter's earnings. */
 function EarningsCard() {
   const s = useHost();
@@ -89,10 +95,18 @@ function EarningsCard() {
       <View style={styles.row}>
         <View style={styles.legend}>
           <View style={[styles.dot, { backgroundColor: hs.accent }]} />
-          <T variant="callout">Pool estimate · {quarter.pool.freeStays} free stays</T>
+          <T variant="callout">Pool estimate · {plural(freeStays, 'free stay')}</T>
         </View>
         <T variant="calloutStrong" style={{ fontVariant: ['tabular-nums'] }}>{money0(quarter.pool.amount)}</T>
       </View>
+      {host.tier === 'Pro' || host.tier === 'Pro+' ? (
+        <View style={styles.row}>
+          <T variant="callout" style={{ flexShrink: 1 }}>Share nights covered by hostmenow</T>
+          <T variant="calloutStrong" style={{ fontVariant: ['tabular-nums'] }}>
+            {fmtNights(covered(ledger, host.id, host.membershipYearStart))} of {host.pledge}
+          </T>
+        </View>
+      ) : null}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, gap: 8 }}>
         <T variant="caption" color="inkSecondary">Pool paid {monthDay(nextPoolPayout())}</T>
         <T variant="caption" color="inkSecondary">
@@ -131,11 +145,15 @@ export default function HostDashboard() {
           <Stat label="Upcoming guests" value={host.upcomingGuests + (optedIn ? 1 : 0)} />
         </View>
         {optedIn ? (
-          <View style={styles.notice}>
-            <View style={styles.badge}>
-              <T variant="captionStrong" style={{ color: '#FFFFFF', fontSize: 12, lineHeight: 16 }}>hostmenow</T>
-            </View>
-            <T variant="callout" style={{ flex: 1 }}>{quarter.latest}</T>
+          <View style={{ gap: 8 }}>
+            {notices.map((n) => (
+              <View key={n} style={styles.notice}>
+                <View style={styles.badge}>
+                  <T variant="captionStrong" style={{ color: '#FFFFFF', fontSize: 12, lineHeight: 16 }}>hostmenow</T>
+                </View>
+                <T variant="callout" style={{ flex: 1 }}>{n}</T>
+              </View>
+            ))}
           </View>
         ) : (
           <View>

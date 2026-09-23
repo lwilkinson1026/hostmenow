@@ -9,6 +9,8 @@ import type { Range } from '@/lib/range';
 import { priceStay, type StayPrice } from '@/lib/pricing';
 import type { IdStatus } from '@/services/identity';
 import type { PayMethod } from '@/services/payments';
+import { send as sendReservation } from '@/services/reservations';
+import type { NightKind } from '@/lib/shareLedger';
 
 export type Booking = {
   id: string;
@@ -22,6 +24,8 @@ export type Booking = {
   doorCode: string;
   /** Free nights in the bank just before this booking, for the confirmed screen animation. */
   bankBefore: number;
+  /** One entry per night, in order. Free nights are applied to the first nights of the stay. */
+  nightKinds: NightKind[];
 };
 
 type State = {
@@ -44,7 +48,7 @@ type Actions = {
   completeOnboarding: () => void;
   signOut: () => void;
   setRange: (r: Range | null) => void;
-  book: (b: Omit<Booking, 'id' | 'doorCode' | 'bankBefore' | 'status'>) => Booking;
+  book: (b: Omit<Booking, 'id' | 'doorCode' | 'bankBefore' | 'status' | 'nightKinds'>) => Booking;
   cancelBooking: (id: string) => void;
   sendInvite: () => void;
   setIdStatus: (s: IdStatus) => void;
@@ -119,6 +123,7 @@ function seedBookings(): Booking[] {
       paidWith: 'card',
       doorCode: '5190',
       bankBefore: 5,
+      nightKinds: ['paid'],
     },
   ];
 }
@@ -152,7 +157,16 @@ export const useApp = create<State & Actions>()((set, get) => ({
       status: 'Confirmed',
       doorCode: String(1000 + Math.floor(Math.random() * 9000)),
       bankBefore,
+      nightKinds: Array.from({ length: b.nights }, (_, i) => (i < b.price.free ? 'free' : 'paid')),
     };
+    sendReservation({
+      type: 'reservation.confirmed',
+      payload: {
+        bookingId: booking.id,
+        listingId: booking.listingId,
+        nights: booking.nightKinds.map((kind, i) => ({ date: toISODate(addDays(fromISODate(booking.checkIn), i)), kind })),
+      },
+    });
     set((s) => ({
       bookings: [booking, ...s.bookings],
       nightGrants: consume(s.nightGrants, b.price.free),
@@ -165,6 +179,7 @@ export const useApp = create<State & Actions>()((set, get) => ({
     set((s) => {
       const b = s.bookings.find((x) => x.id === id);
       if (!b) return s;
+      sendReservation({ type: 'reservation.cancelled', bookingId: b.id, by: 'member' });
       return {
         bookings: s.bookings.filter((x) => x.id !== id),
         nightGrants: freeNightsRefundable(b) ? refund(s.nightGrants, b.price.free) : s.nightGrants,

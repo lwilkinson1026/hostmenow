@@ -97,6 +97,11 @@ export default function Listings() {
                   onChange={(m) => setMode(l.id, m)}
                 />
               ) : null}
+              {row.on && row.mode === 'both' ? (
+                <T variant="caption" color="inkSecondary" style={{ marginTop: -4, paddingLeft: 4 }}>
+                  Free stays count toward your Hostshare sharing.
+                </T>
+              ) : null}
             </View>
           );
         })}

@@ -45,7 +45,15 @@ export default function Terms() {
               {agreed ? <HostIcon name="check-bold" size={18} color="#FFFFFF" /> : null}
             </View>
             <T variant="callout" style={{ flex: 1, lineHeight: 21 }}>
-              I agree to the hostmenow Host Terms. <T variant="calloutStrong" style={{ textDecorationLine: 'underline' }}>Read them in full</T>
+              I agree to the hostmenow Host Terms.{' '}
+              <T
+                variant="calloutStrong"
+                accessibilityRole="link"
+                onPress={() => router.push('/host/terms-full')}
+                style={{ textDecorationLine: 'underline' }}
+              >
+                Read them in full
+              </T>
             </T>
           </Pressable>
           <HostButton label={`Opt in ${live.length} ${live.length === 1 ? 'listing' : 'listings'}`} disabled={!agreed} loading={saving} onPress={submit} />
