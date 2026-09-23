@@ -51,11 +51,9 @@ export default function Landing() {
       return;
     }
     backdropIntro('play');
-    clock.set(
-      withTiming(INTRO.total, { duration: INTRO.total, easing: Easing.linear }, (done) => {
-        if (done) runOnJS(finish)();
-      }),
-    );
+    clock.set(withTiming(INTRO.total, { duration: INTRO.total, easing: Easing.linear }));
+    // The skip layer goes once the page has settled; the clock runs on for "beta".
+    setTimeout(finish, INTRO.settled);
   }, [clock, finish, skipIntro]);
 
   // Never wait on a photo forever: if loading stalls, start anyway.
@@ -89,10 +87,10 @@ export default function Landing() {
   );
 
   // Each style reads clock.value directly so the animation library tracks it (and it runs on the UI thread).
-  const { taglineAt, taglineSecondAt, fieldAt, fade, caretEnd } = INTRO;
-  // "beta" appears where the caret was, just as the caret goes.
+  const { taglineAt, taglineSecondAt, fieldAt, fade, betaAt, betaFade } = INTRO;
+  // "beta" arrives after everything else has settled.
   const betaStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(clock.value, [caretEnd - 100, caretEnd + 250], [0, 1], 'clamp'),
+    opacity: interpolate(clock.value, [betaAt, betaAt + betaFade], [0, 1], 'clamp'),
   }));
   const taglineStyle = useAnimatedStyle(() => ({
     opacity: interpolate(clock.value, [taglineAt, taglineAt + fade], [0, 1], 'clamp'),

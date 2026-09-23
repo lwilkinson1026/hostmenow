@@ -43,7 +43,12 @@ export const INTRO = {
   taglineSecondAt: TYPE_END + 150 + 700,
   fieldAt: TYPE_END + 150 + 700 + 400,
   fade: 450,
-  total: TYPE_END + 150 + 700 + 400 + 450,
+  /** Everything has stopped moving and the field is usable. */
+  settled: TYPE_END + 150 + 700 + 400 + 450,
+  /** "beta" arrives quietly, two seconds after everything settles. */
+  betaAt: TYPE_END + 150 + 700 + 400 + 450 + 2000,
+  betaFade: 700,
+  total: TYPE_END + 150 + 700 + 400 + 450 + 2000 + 700,
   /** How fast a tap skips to the end. */
   skip: 250,
 } as const;
