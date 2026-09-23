@@ -64,15 +64,21 @@ const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const ramp = (now: number, a: number, b: number) => clamp01((now - a) / (b - a));
 const count = (now: number, line: Line) => (now < line.at ? 0 : Math.min(line.text.length, Math.floor((now - line.at) / CH) + 1));
 
+const CARET = '\u258F';
+
 /**
  * Types `text` in place: the untyped rest is laid out but transparent, so lines
- * wrap where they'll finish and nothing shifts while typing.
+ * wrap where they'll finish and nothing shifts while typing. The caret always
+ * holds its space; centered lines get a matching invisible one in front so they
+ * stay truly centered.
  */
 function TypedLine({ text, shown, caret, style, dim }: { text: string; shown: number; caret: boolean; style: TextStyle; dim?: number }) {
+  const centered = style.textAlign === 'center';
   return (
     <Text style={[style, dim !== undefined ? { opacity: dim } : null]}>
+      {centered ? <Text style={{ color: 'transparent' }}>{CARET}</Text> : null}
       {text.slice(0, shown)}
-      <Text style={{ color: caret ? colors.dark.ink : 'transparent' }}>{'▏'}</Text>
+      <Text style={{ color: caret ? colors.dark.ink : 'transparent' }}>{CARET}</Text>
       <Text style={{ color: 'transparent' }}>{text.slice(shown)}</Text>
     </Text>
   );
