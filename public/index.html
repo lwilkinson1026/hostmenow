@@ -6,7 +6,7 @@
     <!-- viewport-fit=cover lets the landing photo run under Safari's status bar and toolbar. -->
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
     <!-- Browser chrome color. The app updates it per screen (dark landing, light app). -->
-    <meta name="theme-color" content="#0B0B0B" />
+    <meta name="theme-color" content="#3B4B61" />
     <title>hostmenow</title>
     <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
     <style id="expo-reset">
@@ -25,10 +25,10 @@
         height: 100%;
         flex: 1;
       }
-      /* Dark until the app sets the screen's color, so there's no white flash. */
+      /* The landing photo's edge colors until the app sets the screen's own, so there's no white flash. */
       html,
       body {
-        background-color: #0b0b0b;
+        background: linear-gradient(#3b4b61 50%, #27313d 50%);
       }
       #root {
         position: relative;
