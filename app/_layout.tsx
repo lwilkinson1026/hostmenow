@@ -9,10 +9,11 @@ import { colors, motion } from '@/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-/** On web, everything but the landing renders as the mobile layout, centered. */
+/** On web, everything but the public pages renders as the mobile layout, centered. */
+const FULL_WIDTH = ['/', '/learn'];
 function WebFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  if (Platform.OS !== 'web' || pathname === '/') return <>{children}</>;
+  if (Platform.OS !== 'web' || FULL_WIDTH.includes(pathname)) return <>{children}</>;
   return (
     <View style={{ flex: 1, backgroundColor: colors.light.bgSubtle, alignItems: 'center' }}>
       <View style={{ flex: 1, width: '100%', maxWidth: 430, overflow: 'hidden' }}>{children}</View>

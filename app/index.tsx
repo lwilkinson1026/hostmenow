@@ -95,6 +95,9 @@ export default function Landing() {
           That code isn't valid.
         </T>
       ) : null}
+      <Pressable accessibilityRole="link" hitSlop={8} onPress={() => router.push('/learn')} style={{ alignSelf: 'center', paddingVertical: 6 }}>
+        <T variant="calloutStrong" tone="dark">Learn more</T>
+      </Pressable>
     </View>
   );
 
