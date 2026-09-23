@@ -7,7 +7,7 @@ import { hs, money0 } from '@/components/host/HostUI';
 import { PressScale } from '@/components/PressScale';
 import { T } from '@/components/Text';
 import { host, hostListings, quarter } from '@/data/host';
-import { monthDay } from '@/lib/dates';
+import { monthDay, plural } from '@/lib/dates';
 import { useInsets } from '@/lib/insets';
 import { nextPoolPayout, roundTo } from '@/lib/pool';
 import { haptics } from '@/services';
@@ -96,7 +96,7 @@ function EarningsCard() {
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, gap: 8 }}>
         <T variant="caption" color="inkSecondary">Pool paid {monthDay(nextPoolPayout())}</T>
         <T variant="caption" color="inkSecondary">
-          {live} {live === 1 ? 'listing' : 'listings'} live · {invitesLeft(s)} invites left
+          {plural(live, 'listing')} live · {plural(invitesLeft(s), 'invite')} left
         </T>
       </View>
     </View>

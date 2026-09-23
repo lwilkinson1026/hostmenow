@@ -7,13 +7,20 @@ import { HostButton, HostSegmented, HostStep, HostSwitch, hs } from '@/component
 import { T } from '@/components/Text';
 import { hostListings } from '@/data/host';
 import { hostshare } from '@/services';
-import { listingEstimate, useHost, type OptInMode } from '@/store/host';
+import { listingEstimate, useHost, type OptInMode, type Row } from '@/store/host';
 
 /** 3. Every live listing is on, paid and free stays, with a live estimate. Also "Manage" after opt-in. */
 export default function Listings() {
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const manage = mode === 'manage';
-  const { rows, toggle, setMode } = useHost();
+  const store = useHost();
+  // During opt-in, choices go straight to the store. When managing, edit a copy and only keep it on Save.
+  const [draft, setDraft] = useState<Row[]>(store.rows);
+  const rows = manage ? draft : store.rows;
+  const toggle = (id: string) =>
+    manage ? setDraft((d) => d.map((r) => (r.id === id ? { ...r, on: !r.on } : r))) : store.toggle(id);
+  const setMode = (id: string, mode: OptInMode) =>
+    manage ? setDraft((d) => d.map((r) => (r.id === id ? { ...r, mode } : r))) : store.setMode(id, mode);
   const [saving, setSaving] = useState(false);
   const live = rows.filter((r) => r.on);
   const total = live.reduce((s, r) => s + listingEstimate(r.id, r.mode), 0);
@@ -21,6 +28,7 @@ export default function Listings() {
   const save = async () => {
     setSaving(true);
     await hostshare.saveListings(live.map((r) => ({ listingId: r.id, level: r.mode })));
+    store.saveRows(draft);
     setSaving(false);
     router.back();
   };

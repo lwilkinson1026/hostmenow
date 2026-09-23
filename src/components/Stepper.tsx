@@ -12,6 +12,7 @@ type Props = {
   min: number;
   max: number;
   onChange: (n: number) => void;
+  /** Plural noun for screen readers, e.g. "guests". */
   noun: string;
 };
 
@@ -49,7 +50,7 @@ export function Stepper({ label, caption, value, min, max, onChange, noun }: Pro
         <T>{label}</T>
         {caption ? <T variant="caption" color="inkSecondary">{caption}</T> : null}
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }} accessibilityLabel={`${value} ${noun}`}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }} accessibilityLabel={`${value} ${value === 1 ? noun.replace(/s$/, '') : noun}`}>
         <StepButton icon="minus" label={`Fewer ${noun}`} disabled={value <= min} onPress={() => onChange(value - 1)} />
         <T variant="bodyStrong" style={{ minWidth: 12, textAlign: 'center', fontVariant: ['tabular-nums'] }}>{value}</T>
         <StepButton icon="plus" label={`More ${noun}`} disabled={value >= max} onPress={() => onChange(value + 1)} />

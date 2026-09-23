@@ -1,4 +1,5 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useRef, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useInsets } from '@/lib/insets';
 
@@ -35,11 +36,15 @@ export function CaptureStep({ title, kind, guide, guideLabel, guideTop, hint, st
     onCaptured();
   };
 
-  useEffect(() => {
-    const t = setTimeout(capture, AUTO_CAPTURE_MS);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Re-arm on every focus, so going back to this step captures again.
+  useFocusEffect(
+    useCallback(() => {
+      done.current = false;
+      const t = setTimeout(capture, AUTO_CAPTURE_MS);
+      return () => clearTimeout(t);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []),
+  );
 
   return (
     <OnboardingScreen background={<CameraSurface facing={kind === 'id' ? 'back' : 'front'} />} contentStyle={{ paddingHorizontal: 0 }}>

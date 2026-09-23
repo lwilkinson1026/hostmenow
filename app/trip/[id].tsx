@@ -154,7 +154,8 @@ export default function Trip() {
               onPress={() =>
                 confirm(`Cancel your trip to ${listing.name}?`, cancelDetail(), 'Cancel trip', () => {
                   cancelBooking(booking.id);
-                  router.replace('/trips');
+                  if (router.canGoBack()) router.back();
+                  else router.dismissTo('/trips');
                 })
               }
             />

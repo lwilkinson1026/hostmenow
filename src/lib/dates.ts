@@ -1,4 +1,3 @@
-const DAY = 24 * 60 * 60 * 1000;
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -9,10 +8,9 @@ export function today(): Date {
   return d;
 }
 
+/** Local midnight `n` calendar days after `d`. Calendar math, so daylight saving changes can't repeat or skip a day. */
 export function addDays(d: Date, n: number): Date {
-  const out = new Date(d.getTime() + n * DAY);
-  out.setHours(0, 0, 0, 0);
-  return out;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 }
 
 /** Days from today +1. The booking window (check-in) is the first 5. */

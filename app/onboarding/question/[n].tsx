@@ -7,6 +7,7 @@ import { useInsets } from '@/lib/insets';
 import Svg, { Circle } from 'react-native-svg';
 
 import { CameraSurface } from '@/components/CameraSurface';
+import { HostIcon } from '@/components/host/HostIcon';
 import { LinearGradientBg } from '@/components/Gradient';
 import { PressScale } from '@/components/PressScale';
 import { T } from '@/components/Text';
@@ -97,9 +98,27 @@ export default function Question() {
         <LinearGradientBg from="#000000" to="#000000" fromOpacity={0} toOpacity={0.6} />
       </View>
 
-      <T variant="heading" tone="dark" style={{ position: 'absolute', left: 24, right: 24, top: insets.top + 25, fontSize: 24, lineHeight: 30 }}>
+      <T
+        variant="heading"
+        tone="dark"
+        style={{ position: 'absolute', left: 24, right: mode === 'rerecord' ? 72 : 24, top: insets.top + 25, fontSize: 24, lineHeight: 30 }}
+      >
         {introQuestions[n - 1]}
       </T>
+      {mode === 'rerecord' ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+          hitSlop={8}
+          onPress={() => {
+            clear();
+            router.dismissTo('/you');
+          }}
+          style={{ position: 'absolute', right: 16, top: insets.top + 16, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <HostIcon name="close" size={18} color={colors.dark.ink} />
+        </Pressable>
+      ) : null}
 
       <View style={{ position: 'absolute', left: 0, right: 0, bottom: Math.max(insets.bottom, 16) + 14, alignItems: 'center', gap: 10 }}>
         <PressScale accessibilityRole="button" accessibilityLabel={buttonLabel} onPress={onButton} style={{ width: 100, height: 100, alignItems: 'center', justifyContent: 'center' }}>

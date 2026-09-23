@@ -4,7 +4,7 @@ import { host, hostListings } from '@/data/host';
 import { estimateListing, roundTo } from '@/lib/pool';
 
 export type OptInMode = 'both' | 'paid';
-type Row = { id: string; on: boolean; mode: OptInMode };
+export type Row = { id: string; on: boolean; mode: OptInMode };
 
 type State = {
   rows: Row[];
@@ -20,6 +20,8 @@ type State = {
 
 type Actions = {
   toggle: (id: string) => void;
+  /** Save edited listings after opt-in. Turning every listing off opts the host out. */
+  saveRows: (rows: Row[]) => void;
   setMode: (id: string, mode: OptInMode) => void;
   setBooking: (b: State['booking']) => void;
   setDamageHold: (v: boolean) => void;
@@ -48,6 +50,7 @@ export const useHost = create<State & Actions>()((set) => ({
   ...initial(),
   toggle: (id) => set((s) => ({ rows: s.rows.map((r) => (r.id === id ? { ...r, on: !r.on } : r)) })),
   setMode: (id, mode) => set((s) => ({ rows: s.rows.map((r) => (r.id === id ? { ...r, mode } : r)) })),
+  saveRows: (rows) => set({ rows, optedIn: rows.some((r) => r.on) }),
   setBooking: (booking) => set({ booking }),
   setDamageHold: (damageHold) => set({ damageHold }),
   setW9: (patch) => set((s) => ({ w9: { ...s.w9, ...patch } })),

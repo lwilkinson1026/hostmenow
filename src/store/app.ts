@@ -193,13 +193,15 @@ export const useFreeNights = () => useApp(usableNightsOf);
 /** Everything in the bank, including locked or frozen nights. Drives the nights pill and bank. */
 export const useBankedNights = () => useApp((s) => freeNightsOf(s.nightGrants));
 
-/** Availability for a home on a night, counting the member's own bookings as taken. */
+/**
+ * Availability for a home on a night. A night the member already has a stay
+ * (at any home) counts as taken, so they can't double-book themselves.
+ */
 export function useIsOpen() {
   const bookings = useApp((s) => s.bookings);
   return useCallback(
     (l: Listing, day: number) =>
-      isOpenOn(l, day) &&
-      !bookings.some((b) => b.listingId === l.id && day >= offsetOf(b.checkIn) && day < offsetOf(b.checkIn) + b.nights),
+      isOpenOn(l, day) && !bookings.some((b) => day >= offsetOf(b.checkIn) && day < offsetOf(b.checkIn) + b.nights),
     [bookings],
   );
 }
