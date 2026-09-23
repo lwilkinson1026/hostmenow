@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <!-- viewport-fit=cover lets the landing photo run under Safari's status bar and toolbar. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+    <!-- Browser chrome color. The app updates it per screen (dark landing, light app). -->
+    <meta name="theme-color" content="#0B0B0B" />
+    <title>hostmenow</title>
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+      /* Dark until the app sets the screen's color, so there's no white flash. */
+      html,
+      body {
+        background-color: #0b0b0b;
+      }
+      #root {
+        position: relative;
+        z-index: 1;
+      }
+      /* Full-bleed photo behind the landing: fixed to the large viewport, so on
+         iPhone it runs under Safari's status bar and toolbar. Set from src/lib/webChrome.ts. */
+      #backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        height: 100lvh;
+        overflow: hidden;
+        z-index: 0;
+        background-color: #0b0b0b;
+      }
+      #backdrop.on {
+        display: block;
+      }
+      #backdrop img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform-origin: 50% 50%;
+        animation: drift 20s ease-in-out infinite alternate;
+      }
+      #backdrop .shade {
+        position: absolute;
+        inset: 0;
+      }
+      @keyframes drift {
+        from { transform: scale(1.04) translate(0, 0); }
+        to { transform: scale(1.16) translate(-2.5%, -1.5%); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #backdrop img { animation: none; transform: scale(1.04); }
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>You need to enable JavaScript to run hostmenow.</noscript>
+    <div id="backdrop" aria-hidden="true"><img alt="" /><div class="shade"></div></div>
+    <div id="root"></div>
+  </body>
+</html>

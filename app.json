@@ -37,7 +37,11 @@
       "expo-font",
       [
         "expo-splash-screen",
-        { "backgroundColor": "#0B0B0B", "image": "./assets/splash-icon.png", "imageWidth": 120 }
+        {
+          "backgroundColor": "#0B0B0B",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 120
+        }
       ],
       [
         "expo-camera",
@@ -45,7 +49,8 @@
           "cameraPermission": "hostmenow uses the camera to check your ID and record your intro.",
           "microphonePermission": "hostmenow records audio with your intro video."
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,6 +1,6 @@
-import { Redirect, router } from 'expo-router';
+import { Redirect, router, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useInsets } from '@/lib/insets';
@@ -12,6 +12,7 @@ import { Spinner } from '@/components/Spinner';
 import { T, Wordmark } from '@/components/Text';
 import { haptics, invites } from '@/services';
 import { useApp } from '@/store/app';
+import { hasWebBackdrop, setBackdrop } from '@/lib/webChrome';
 import { colors, motion, radius, type } from '@/theme';
 
 const WIDE = 900;
@@ -27,6 +28,19 @@ export default function Landing() {
   const [invalid, setInvalid] = useState(false);
   const [checking, setChecking] = useState(false);
   const input = useRef<TextInput>(null);
+
+  // On web the photo is pinned behind the whole page so it fills the screen under Safari's bars.
+  // Set on every focus: the landing stays mounted underneath other screens.
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasWebBackdrop) return;
+      setBackdrop(
+        wide
+          ? { source: require('../assets/photos/landing-web.jpg'), overlay: motion.overlay.landingWeb }
+          : { source: require('../assets/photos/landing-mobile.jpg'), cropX: 36, overlay: motion.overlay.landingMobile },
+      );
+    }, [wide]),
+  );
 
   const x = useSharedValue(0);
   const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
@@ -114,9 +128,9 @@ export default function Landing() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.dark.bg }}>
+    <View style={{ flex: 1, backgroundColor: hasWebBackdrop ? 'transparent' : colors.dark.bg }}>
       <StatusBar style="light" />
-      {wide ? (
+      {hasWebBackdrop ? null : wide ? (
         <DriftBackground source={require('../assets/photos/landing-web.jpg')} overlay={motion.overlay.landingWeb} />
       ) : (
         <DriftBackground source={require('../assets/photos/landing-mobile.jpg')} cropX={36} overlay={motion.overlay.landingMobile} />
