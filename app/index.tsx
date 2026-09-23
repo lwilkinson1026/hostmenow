@@ -183,7 +183,7 @@ export default function Landing() {
       </Pressable>
       <T variant="caption" tone="dark" color="inkTertiary">·</T>
       <Pressable accessibilityRole="link" hitSlop={8} onPress={() => router.push('/host')}>
-        <T variant="caption" tone="dark" color="inkTertiary">Hostshare Hosts click here</T>
+        <T variant="caption" tone="dark" color="inkTertiary">Earn as a Host</T>
       </Pressable>
     </View>
   );

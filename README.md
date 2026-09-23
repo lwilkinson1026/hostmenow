@@ -27,7 +27,7 @@ Also wired: the three tabs, the List / Map toggle, search, date chips, the night
 
 ## Host opt-in (Hostshare hosts)
 
-"Hostshare Hosts click here" at the bottom of the landing opens the host flow as it would appear inside the Hostshare app: dashboard card → value → choose listings → who you'll host → payouts and W-9 → terms → live with 5 host invites → the dashboard card becomes quarterly earnings ("Manage" edits listings).
+"Earn as a Host" at the bottom of the landing opens the host flow as it would appear inside the Hostshare app: dashboard card → value → choose listings → who you'll host → payouts and W-9 → terms → live with 5 host invites → the dashboard card becomes quarterly earnings ("Manage" edits listings).
 
 **Revision 01 (free member stays count toward Hostshare share nights):** the prototype carries the host copy, the "Share nights covered by hostmenow" row, and a reference share-credit ledger in `src/lib/shareLedger.ts` (earn-rate weighted, pending at booking, final on completion or no-show, reversed on member cancel, none on host cancel, idempotent per booking night). Bookings record which nights were free or paid and send that in the reservation payload (`src/services/reservations.ts`). The real ledger, webhooks and backfill belong in the Hostshare backend, which isn't in this repo.
 
