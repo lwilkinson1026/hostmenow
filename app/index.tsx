@@ -24,6 +24,7 @@ const LANDING_CROP_X = 51;
 /** A. Locked landing. Wordmark, pitch line, invite code. Nothing else. */
 export default function Landing() {
   const isMember = useApp((s) => s.isMember);
+  const completeOnboarding = useApp((s) => s.completeOnboarding);
   const { width } = useWindowDimensions();
   const insets = useInsets();
   const wide = Platform.OS === 'web' && width >= WIDE;
@@ -112,6 +113,12 @@ export default function Landing() {
 
   if (isMember) return <Redirect href="/explore" />;
 
+  const logIn = () => {
+    haptics.tapLight();
+    completeOnboarding();
+    router.replace('/explore');
+  };
+
   const submit = async () => {
     if (checking) return;
     if (!code.trim()) {
@@ -184,6 +191,11 @@ export default function Landing() {
       <T variant="caption" tone="dark" color="inkTertiary">·</T>
       <Pressable accessibilityRole="link" hitSlop={8} onPress={() => router.push('/hosts')}>
         <T variant="caption" tone="dark" color="inkTertiary">Earn as a Host</T>
+      </Pressable>
+      <T variant="caption" tone="dark" color="inkTertiary">·</T>
+      {/* Members: straight into the app (the prototype has no real sign-in yet). */}
+      <Pressable accessibilityRole="button" hitSlop={8} onPress={logIn}>
+        <T variant="caption" tone="dark" color="inkTertiary">Log in</T>
       </Pressable>
     </View>
   );
