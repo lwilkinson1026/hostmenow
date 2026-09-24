@@ -10,6 +10,7 @@ import { VideoTile } from '@/components/VideoTile';
 import { member } from '@/data/mock';
 import { MEMBERSHIP_MONTHLY } from '@/config';
 import { monthDay, monthYear, nextMonthly, plural } from '@/lib/dates';
+import { useColumn, useDesktop } from '@/lib/layout';
 import { auth, haptics } from '@/services';
 import { useApp, useBankedNights, useInvitesLeft } from '@/store/app';
 import { colors, radius } from '@/theme';
@@ -17,6 +18,7 @@ import { colors, radius } from '@/theme';
 type RowProps = { label: string; value?: string; href?: Href; onPress?: () => void; first?: boolean; chevron?: boolean };
 
 function Row({ label, value, href, onPress, first, chevron = true }: RowProps) {
+  const desktop = useDesktop();
   return (
     <Pressable
       accessibilityRole="button"
@@ -25,7 +27,12 @@ function Row({ label, value, href, onPress, first, chevron = true }: RowProps) {
         if (href) router.push(href);
         onPress?.();
       }}
-      style={({ pressed }) => [styles.row, !first && styles.rowDivider, pressed && { backgroundColor: colors.light.line }]}
+      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
+        styles.row,
+        !first && styles.rowDivider,
+        desktop && hovered && !pressed && { backgroundColor: colors.light.line + '80' },
+        pressed && { backgroundColor: colors.light.line },
+      ]}
     >
       <T style={{ flex: 1 }}>{label}</T>
       {value ? <T variant="callout" color="inkSecondary">{value}</T> : null}
@@ -37,6 +44,8 @@ function Row({ label, value, href, onPress, first, chevron = true }: RowProps) {
 /** I. You. */
 export default function You() {
   const insets = useInsets();
+  const desktop = useDesktop();
+  const column = useColumn(640);
   const nights = useBankedNights();
   const { membership, signOut } = useApp();
   const invitesLeft = useInvitesLeft();
@@ -51,7 +60,7 @@ export default function You() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.light.bg }}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 39, paddingHorizontal: 24, paddingBottom: 32, gap: 24 }}>
+      <ScrollView contentContainerStyle={[{ paddingTop: desktop ? 56 : insets.top + 39, paddingHorizontal: 24, paddingBottom: desktop ? 80 : 32, gap: 24 }, column]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <Avatar size={64} initials={member.initials} />
           <View style={{ gap: 2 }}>

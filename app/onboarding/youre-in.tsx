@@ -10,10 +10,12 @@ import { T } from '@/components/Text';
 import { useApp } from '@/store/app';
 import { colors } from '@/theme';
 import { BRAND } from '@/config';
+import { useDesktop } from '@/lib/layout';
 
 /** B7. You're in. "Start exploring" cross-fades from dark onboarding to the light app. */
 export default function YoureIn() {
   const completeOnboarding = useApp((s) => s.completeOnboarding);
+  const desktop = useDesktop();
   const [leaving, setLeaving] = useState(false);
   const white = useSharedValue(0);
   const fade = useAnimatedStyle(() => ({ opacity: white.value }));
@@ -40,7 +42,7 @@ export default function YoureIn() {
         contentStyle={{ justifyContent: 'center' }}
         actions={<PrimaryButton tone="dark" label="Start exploring" onPress={start} />}
       >
-        <View style={{ gap: 14, marginTop: -20 }}>
+        <View style={{ gap: 14, marginTop: desktop ? 0 : -20 }}>
           <T variant="display" tone="dark">5 nights are yours.</T>
           <T tone="dark" color="inkSecondary">Anywhere on {BRAND}, within 5 days of arrival.</T>
         </View>

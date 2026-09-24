@@ -4,13 +4,15 @@ import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useInsets } from '@/lib/insets';
+import { CONTENT_MAX, DESKTOP_GUTTER, useDesktop } from '@/lib/layout';
 
 import { Avatar } from '@/components/Avatar';
-import { BookingSheet } from '@/components/BookingSheet';
+import { BookingPanel, BookingSheet } from '@/components/BookingSheet';
 import { CircleButton } from '@/components/CircleButton';
 import { Hairline } from '@/components/Hairline';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
+import { PriceLine } from '@/components/PriceLine';
 import { Sheet, type SheetRef } from '@/components/Sheet';
 import { Spinner } from '@/components/Spinner';
 import { StaticMap } from '@/components/StaticMap';
@@ -70,6 +72,40 @@ function Carousel({ listing, height }: { listing: Listing; height: number }) {
   );
 }
 
+/** Desktop: one large photo with up to four beside it, or one wide photo. */
+function PhotoGrid({ listing, height }: { listing: Listing; height: number }) {
+  const [first, ...rest] = listing.photos;
+  const side = rest.slice(0, 4);
+  const img = (p: Listing['photos'][number], style: object) => (
+    <Image
+      key={p.alt}
+      source={p.src}
+      accessibilityLabel={p.alt}
+      contentFit="cover"
+      contentPosition={{ left: `${p.cropX}%`, top: '50%' }}
+      transition={200}
+      style={style}
+    />
+  );
+  const tile = (height - 8) / 2;
+  return (
+    <View style={{ height, flexDirection: 'row', gap: 8, borderRadius: radius.card, overflow: 'hidden' }}>
+      {img(first, { flex: side.length ? 1 : undefined, width: side.length ? undefined : '100%', height })}
+      {side.length ? (
+        <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {side.map((p, i) =>
+            img(p, {
+              // Two across when there are 3 or 4; a lone last photo in an odd set spans the row.
+              width: side.length > 2 && !(side.length === 3 && i === 2) ? 'calc(50% - 4px)' : '100%',
+              height: side.length > 1 ? tile : height,
+            }),
+          )}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 function Fact({ icon, label }: { icon: IconName; label: string }) {
   return (
     <View style={{ flex: 1, gap: 6, alignItems: 'flex-start' }}>
@@ -96,6 +132,7 @@ export default function ListingScreen() {
   const bank = useFreeNights();
   const free = listing ? freeNightsAt(listing, bank) > 0 : false;
   const { idStatus, membership, setIdStatus } = useApp();
+  const desktop = useDesktop();
   const [expanded, setExpanded] = useState(false);
   const [info, setInfo] = useState<'amenities' | 'rules'>('amenities');
 
@@ -132,6 +169,26 @@ export default function ListingScreen() {
     bookSheet.current?.present();
   };
 
+  /** Desktop books inline: the same checks as `book`, run when Pay is tapped. */
+  const canPay = async () => {
+    if (membership === 'paused') {
+      router.push({ pathname: '/onboarding/pay', params: { mode: 'resume' } });
+      return false;
+    }
+    if (idStatus === 'failed') {
+      router.push('/id-failed');
+      return false;
+    }
+    if (idStatus === 'verifying') {
+      verifySheet.current?.present();
+      const s = await identity.checkStatus();
+      setIdStatus(s);
+      verifySheet.current?.dismiss();
+      return s === 'verified';
+    }
+    return true;
+  };
+
   const showInfo = (k: 'amenities' | 'rules') => {
     setInfo(k);
     infoSheet.current?.present();
@@ -139,69 +196,148 @@ export default function ListingScreen() {
 
   const half = Math.round(listing.retailNight / 2);
 
+  const details = (
+    <>
+      <View style={{ gap: 4 }}>
+        <T variant="title" accessibilityRole="header">{listing.name}</T>
+        <T variant="callout" color="inkSecondary">{listing.region}</T>
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <Avatar initials={listing.host[0]} />
+        <T>Hosted by {listing.host}</T>
+      </View>
+
+      <Hairline />
+      <View style={{ flexDirection: 'row' }}>
+        <Fact icon="guests" label={plural(listing.guests, 'guest')} />
+        <Fact icon="bed" label={plural(listing.bedrooms, 'bedroom')} />
+        <Fact icon="bath" label={plural(listing.baths, 'bath')} />
+      </View>
+
+      <Hairline />
+      <View style={{ gap: 6 }}>
+        <T numberOfLines={expanded ? undefined : 3}>{listing.description}</T>
+        {expanded ? null : <Link label="More" onPress={() => setExpanded(true)} />}
+      </View>
+
+      <Hairline />
+      <View style={{ gap: 16 }}>
+        <T variant="heading">What's here</T>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 20 }}>
+          {listing.amenities.slice(0, 6).map((a) => (
+            <View key={a.label} style={{ width: '33.33%', gap: 6, paddingRight: 12 }}>
+              <Icon name={a.icon} />
+              <T variant="callout">{a.label}</T>
+            </View>
+          ))}
+        </View>
+        {listing.amenities.length > 6 ? <Link label="All amenities" onPress={() => showInfo('amenities')} /> : null}
+      </View>
+
+      <Hairline />
+      <View style={{ gap: 12 }}>
+        <T variant="heading">Where you'll be</T>
+        <StaticMap height={180} marker="area" />
+        <T variant="caption" color="inkSecondary">Approximate area. Exact address after booking.</T>
+      </View>
+
+      <Hairline />
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => showInfo('rules')}
+        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44, gap: 12 }}
+      >
+        <View style={{ flex: 1, gap: 2 }}>
+          <T variant="bodyStrong">House rules</T>
+          <T variant="callout" color="inkSecondary">{listing.rulesSummary}</T>
+        </View>
+        <Icon name="chevron-right" size={20} color={colors.light.inkSecondary} />
+      </Pressable>
+    </>
+  );
+
+  const sheets = (
+    <>
+        <BookingSheet
+          ref={bookSheet}
+          listing={listing}
+          onBooked={(b) => {
+            bookSheet.current?.dismiss();
+            router.push({ pathname: '/confirmed/[id]', params: { id: b.id } });
+          }}
+        />
+
+        <Sheet ref={verifySheet} dismissible={false}>
+          <View style={{ alignItems: 'center', gap: 14, paddingTop: 24, paddingBottom: 64 }}>
+            <Spinner size={28} />
+            <T variant="heading" align="center">One moment.</T>
+            <T color="inkSecondary" align="center">We're still checking your ID.</T>
+          </View>
+        </Sheet>
+
+        <Sheet ref={infoSheet}>
+          <T variant="heading" style={{ marginBottom: 8 }}>{info === 'amenities' ? "What's here" : 'House rules'}</T>
+          {(info === 'amenities' ? listing.amenities.map((a) => a.label) : listing.rules).map((line) => (
+            <T key={line} style={styles.infoRow}>{line}</T>
+          ))}
+        </Sheet>
+    </>
+  );
+
+  if (desktop) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.light.bg }}>
+        <StatusBar style="dark" />
+        <ScrollView contentContainerStyle={{ width: '100%', maxWidth: CONTENT_MAX, alignSelf: 'center', paddingHorizontal: DESKTOP_GUTTER, paddingTop: 20, paddingBottom: 80 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => (router.canGoBack() ? router.back() : router.replace('/explore'))}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 40 }}
+            >
+              <Icon name="chevron-left" size={18} />
+              <T variant="calloutStrong">Explore</T>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                haptics.tapLight();
+                invites.shareListing(listing.id);
+              }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 40 }}
+            >
+              <Icon name="share" size={16} />
+              <T variant="calloutStrong" style={{ textDecorationLine: 'underline' }}>Share</T>
+            </Pressable>
+          </View>
+          <PhotoGrid listing={listing} height={Math.min(520, Math.max(360, Math.round(height * 0.5)))} />
+          <View style={{ flexDirection: 'row', gap: 64, marginTop: 40, alignItems: 'flex-start' }}>
+            <View style={{ flex: 1, gap: 20, maxWidth: 680 }}>{details}</View>
+            <View style={[styles.aside, { position: 'sticky' } as object]}>
+              <View style={{ marginBottom: 20 }}>
+                <PriceLine listing={listing} free={free} />
+              </View>
+              <BookingPanel
+                listing={listing}
+                beforePay={canPay}
+                onBooked={(b) => router.push({ pathname: '/confirmed/[id]', params: { id: b.id } })}
+              />
+            </View>
+          </View>
+        </ScrollView>
+        {sheets}
+      </View>
+    );
+  }
+
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.light.bg }}>
       <StatusBar style="light" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 130 + insets.bottom }}>
         <Carousel listing={listing} height={Math.round(height * 0.55)} />
 
-        <View style={{ padding: 24, paddingBottom: 0, gap: 20 }}>
-          <View style={{ gap: 4 }}>
-            <T variant="title" accessibilityRole="header">{listing.name}</T>
-            <T variant="callout" color="inkSecondary">{listing.region}</T>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Avatar initials={listing.host[0]} />
-            <T>Hosted by {listing.host}</T>
-          </View>
-
-          <Hairline />
-          <View style={{ flexDirection: 'row' }}>
-            <Fact icon="guests" label={plural(listing.guests, 'guest')} />
-            <Fact icon="bed" label={plural(listing.bedrooms, 'bedroom')} />
-            <Fact icon="bath" label={plural(listing.baths, 'bath')} />
-          </View>
-
-          <Hairline />
-          <View style={{ gap: 6 }}>
-            <T numberOfLines={expanded ? undefined : 3}>{listing.description}</T>
-            {expanded ? null : <Link label="More" onPress={() => setExpanded(true)} />}
-          </View>
-
-          <Hairline />
-          <View style={{ gap: 16 }}>
-            <T variant="heading">What's here</T>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 20 }}>
-              {listing.amenities.slice(0, 6).map((a) => (
-                <View key={a.label} style={{ width: '33.33%', gap: 6, paddingRight: 12 }}>
-                  <Icon name={a.icon} />
-                  <T variant="callout">{a.label}</T>
-                </View>
-              ))}
-            </View>
-            {listing.amenities.length > 6 ? <Link label="All amenities" onPress={() => showInfo('amenities')} /> : null}
-          </View>
-
-          <Hairline />
-          <View style={{ gap: 12 }}>
-            <T variant="heading">Where you'll be</T>
-            <StaticMap height={180} marker="area" />
-            <T variant="caption" color="inkSecondary">Approximate area. Exact address after booking.</T>
-          </View>
-
-          <Hairline />
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => showInfo('rules')}
-            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44, gap: 12 }}
-          >
-            <View style={{ flex: 1, gap: 2 }}>
-              <T variant="bodyStrong">House rules</T>
-              <T variant="callout" color="inkSecondary">{listing.rulesSummary}</T>
-            </View>
-            <Icon name="chevron-right" size={20} color={colors.light.inkSecondary} />
-          </Pressable>
-        </View>
+        <View style={{ padding: 24, paddingBottom: 0, gap: 20 }}>{details}</View>
       </ScrollView>
 
       <View style={[styles.floating, { top: insets.top - 5, left: 16 }]}>
@@ -238,29 +374,7 @@ export default function ListingScreen() {
         </PressScale>
       </View>
 
-      <BookingSheet
-        ref={bookSheet}
-        listing={listing}
-        onBooked={(b) => {
-          bookSheet.current?.dismiss();
-          router.push({ pathname: '/confirmed/[id]', params: { id: b.id } });
-        }}
-      />
-
-      <Sheet ref={verifySheet} dismissible={false}>
-        <View style={{ alignItems: 'center', gap: 14, paddingTop: 24, paddingBottom: 64 }}>
-          <Spinner size={28} />
-          <T variant="heading" align="center">One moment.</T>
-          <T color="inkSecondary" align="center">We're still checking your ID.</T>
-        </View>
-      </Sheet>
-
-      <Sheet ref={infoSheet}>
-        <T variant="heading" style={{ marginBottom: 8 }}>{info === 'amenities' ? "What's here" : 'House rules'}</T>
-        {(info === 'amenities' ? listing.amenities.map((a) => a.label) : listing.rules).map((line) => (
-          <T key={line} style={styles.infoRow}>{line}</T>
-        ))}
-      </Sheet>
+      {sheets}
     </View>
   );
 }
@@ -290,5 +404,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.light.ink,
     justifyContent: 'center',
   },
+  aside: { width: 400, top: 24, paddingLeft: 40, paddingRight: 24, paddingVertical: 8, borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: colors.light.line },
   infoRow: { paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.light.line },
 });

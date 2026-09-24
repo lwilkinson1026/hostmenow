@@ -5,19 +5,31 @@ import { useEffect, type ReactNode } from 'react';
 import { Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { DesktopNav } from '@/components/DesktopNav';
+import { isAppInterior, useDesktop } from '@/lib/layout';
 import { pageColorsFor, setBackdrop, setPageBackground } from '@/lib/webChrome';
+import { useApp } from '@/store/app';
 import { colors, motion } from '@/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-/** On web, everything but the public pages renders as the mobile layout, centered. */
-const FULL_WIDTH = ['/', '/learn', '/hosts'];
+/**
+ * Web frame. Desktop members get the top nav over the app interior (the bottom tab
+ * bar hides). The Hostshare preview stays phone-width: it shows how the opt-in
+ * looks inside the Hostshare mobile app. The structure never changes shape, so the
+ * navigator isn't remounted when the route changes.
+ */
 function WebFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  if (Platform.OS !== 'web' || FULL_WIDTH.includes(pathname)) return <>{children}</>;
+  const desktop = useDesktop();
+  const isMember = useApp((s) => s.isMember);
+  if (Platform.OS !== 'web') return <>{children}</>;
+  const phone = pathname.startsWith('/preview/hostshare');
+  const nav = desktop && isMember && isAppInterior(pathname);
   return (
-    <View style={{ flex: 1, backgroundColor: colors.light.bgSubtle, alignItems: 'center' }}>
-      <View style={{ flex: 1, width: '100%', maxWidth: 430, overflow: 'hidden' }}>{children}</View>
+    <View style={{ flex: 1, backgroundColor: phone ? colors.light.bgSubtle : 'transparent', alignItems: 'center' }}>
+      {nav ? <DesktopNav /> : null}
+      <View style={{ flex: 1, width: '100%', maxWidth: phone ? 480 : undefined, overflow: 'hidden' }}>{children}</View>
     </View>
   );
 }
@@ -47,9 +59,9 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: Platform.OS === 'web' ? 'transparent' : colors.dark.bg }}>
       <WebPageChrome />
-      <WebFrame>
-        <ThemeProvider value={navTheme}>
+      <ThemeProvider value={navTheme}>
         <BottomSheetModalProvider>
+          <WebFrame>
           <Stack
             screenOptions={{
               headerShown: false,
@@ -69,9 +81,9 @@ export default function RootLayout() {
             <Stack.Screen name="confirmed/[id]" options={{ gestureEnabled: false, animation: 'fade' }} />
             <Stack.Screen name="id-failed" options={{ animation: 'fade', contentStyle: { backgroundColor: colors.dark.bg } }} />
           </Stack>
+          </WebFrame>
         </BottomSheetModalProvider>
-        </ThemeProvider>
-      </WebFrame>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }

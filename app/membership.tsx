@@ -10,6 +10,7 @@ import { MEMBERSHIP_MONTHLY } from '@/config';
 import { member } from '@/data/mock';
 import { monthDay, nextMonthly, plural } from '@/lib/dates';
 import { useInsets } from '@/lib/insets';
+import { useColumn, useDesktop } from '@/lib/layout';
 import { analytics, auth, haptics } from '@/services';
 import { useApp, useBankedNights } from '@/store/app';
 import { colors } from '@/theme';
@@ -19,6 +20,13 @@ const benefits = ['5 free nights every year', '50% off every night after that', 
 /** Membership, with the cancel flow and its retention screen (Revision 03, 3.7). */
 export default function Membership() {
   const insets = useInsets();
+  const desktop = useDesktop();
+  const column = useColumn(640);
+  // Desktop: a reading column under the top nav, with actions following the content
+  // instead of pinned to the bottom of a tall window.
+  const page = desktop
+    ? [styles.page, column, { paddingTop: 24, paddingBottom: 80 }]
+    : [styles.page, { paddingTop: insets.top - 5, paddingBottom: Math.max(insets.bottom, 16) + 16 }];
   const banked = useBankedNights();
   const setMembership = useApp((s) => s.setMembership);
   const [step, setStep] = useState<'details' | 'retain'>('details');
@@ -44,10 +52,11 @@ export default function Membership() {
 
   if (step === 'retain') {
     return (
-      <View style={[styles.page, { paddingTop: insets.top - 5, paddingBottom: Math.max(insets.bottom, 16) + 16 }]}>
+      <View style={styles.bg}>
+      <View style={page}>
         <StatusBar style="dark" />
         <NavHeader />
-        <View style={{ flex: 1, justifyContent: 'center', gap: 14 }}>
+        <View style={desktop ? { marginTop: 120, gap: 14 } : { flex: 1, justifyContent: 'center', gap: 14 }}>
           <T variant="display" accessibilityRole="header">
             {banked > 0 ? `You have ${plural(banked, 'free night')} banked.` : 'Before you go.'}
           </T>
@@ -57,16 +66,18 @@ export default function Membership() {
               : 'You can rejoin any time, and your free nights start again each year.'}
           </T>
         </View>
-        <View style={{ gap: 4 }}>
+        <View style={desktop ? { gap: 4, marginTop: 48, width: 360 } : { gap: 4 }}>
           <PrimaryButton label="Keep my membership" onPress={keep} />
           <TextButton label="Cancel anyway" loading={cancelling} onPress={cancelAnyway} />
         </View>
+      </View>
       </View>
     );
   }
 
   return (
-    <View style={[styles.page, { paddingTop: insets.top - 5, paddingBottom: Math.max(insets.bottom, 16) + 16 }]}>
+    <View style={styles.bg}>
+    <View style={page}>
       <StatusBar style="dark" />
       <NavHeader title="Membership" />
       <View style={{ marginTop: 40, gap: 4 }}>
@@ -81,13 +92,20 @@ export default function Membership() {
           <T key={b} style={styles.line}>{b}</T>
         ))}
       </View>
-      <View style={{ flex: 1 }} />
-      <TextButton label="Cancel membership" color="danger" onPress={startCancel} />
+      {desktop ? null : <View style={{ flex: 1 }} />}
+      <TextButton
+        label="Cancel membership"
+        color="danger"
+        onPress={startCancel}
+        style={desktop ? { alignSelf: 'flex-start', marginTop: 24 } : undefined}
+      />
+    </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  bg: { flex: 1, backgroundColor: colors.light.bg },
   page: { flex: 1, backgroundColor: colors.light.bg, paddingHorizontal: 24 },
   line: { paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.light.line },
 });

@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useInsets } from '@/lib/insets';
 
 import { Icon } from '@/components/Icon';
@@ -11,6 +11,7 @@ import { Segmented } from '@/components/Segmented';
 import { T } from '@/components/Text';
 import { getListing } from '@/data/mock';
 import { addDays, fromISODate, plural, shortRange, today } from '@/lib/dates';
+import { CONTENT_MAX, DESKTOP_GUTTER, useDesktop } from '@/lib/layout';
 import { useApp, type Booking } from '@/store/app';
 import { colors, radius } from '@/theme';
 
@@ -42,9 +43,44 @@ function TripRow({ b }: { b: Booking }) {
   );
 }
 
+/** Desktop: a trip as a card in the grid. Photo first, text below, like the Explore cards. */
+function TripCard({ b, width }: { b: Booking; width: number }) {
+  const l = getListing(b.listingId);
+  if (!l) return null;
+  const cover = l.photos[0];
+  const inDate = fromISODate(b.checkIn);
+  return (
+    <PressScale
+      accessibilityRole="link"
+      accessibilityLabel={`${l.name}, ${shortRange(inDate, checkout(b))}, ${b.status}`}
+      onPress={() => router.push({ pathname: '/trip/[id]', params: { id: b.id } })}
+      scaleTo={0.985}
+      style={{ width, gap: 12 }}
+    >
+      <Image
+        source={cover.src}
+        contentFit="cover"
+        contentPosition={{ left: `${cover.cropX}%`, top: '50%' }}
+        style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.card }}
+      />
+      <View style={{ gap: 2 }}>
+        <T variant="heading">{l.name}</T>
+        <T variant="callout" color="inkSecondary">
+          {shortRange(inDate, checkout(b))} · {plural(b.nights, 'night')}
+        </T>
+        <T variant="caption" color={b.status === 'Confirmed' ? 'ink' : 'inkSecondary'} style={{ marginTop: 2 }}>{b.status}</T>
+      </View>
+    </PressScale>
+  );
+}
+
+const GRID_GAP = 24;
+
 /** G. Trips. */
 export default function Trips() {
   const insets = useInsets();
+  const desktop = useDesktop();
+  const { width: windowWidth } = useWindowDimensions();
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
   const { bookings, tripsEmpty } = useApp();
   const now = today().getTime();
@@ -53,27 +89,58 @@ export default function Trips() {
     .filter((b) => (tab === 'upcoming' ? checkout(b).getTime() >= now : checkout(b).getTime() < now))
     .sort((a, b) => a.checkIn.localeCompare(b.checkIn));
 
+  // Desktop grid: 3 columns in a wide window, 2 in a narrower one.
+  const inner = Math.min(windowWidth, CONTENT_MAX + DESKTOP_GUTTER * 2) - DESKTOP_GUTTER * 2;
+  const cols = inner >= 1000 ? 3 : 2;
+  const cardWidth = Math.floor((inner - GRID_GAP * (cols - 1)) / cols);
+
+  const segmented = (
+    <Segmented
+      options={[
+        { value: 'upcoming', label: 'Upcoming' },
+        { value: 'past', label: 'Past' },
+      ]}
+      value={tab}
+      onChange={setTab}
+      style={desktop ? { width: 260 } : undefined}
+    />
+  );
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.light.bg }}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 39, paddingHorizontal: 24, paddingBottom: 40, gap: 20 }}>
-        <T variant="title" accessibilityRole="header">Trips</T>
-        <Segmented
-          options={[
-            { value: 'upcoming', label: 'Upcoming' },
-            { value: 'past', label: 'Past' },
-          ]}
-          value={tab}
-          onChange={setTab}
-        />
-        {shown.length ? (
+      <ScrollView
+        contentContainerStyle={
+          desktop
+            ? { paddingTop: 48, paddingHorizontal: DESKTOP_GUTTER, paddingBottom: 80, gap: 32, width: '100%', maxWidth: CONTENT_MAX + DESKTOP_GUTTER * 2, alignSelf: 'center' }
+            : { paddingTop: insets.top + 39, paddingHorizontal: 24, paddingBottom: 40, gap: 20 }
+        }
+      >
+        {desktop ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
+            <T variant="title" accessibilityRole="header">Trips</T>
+            {segmented}
+          </View>
+        ) : (
+          <>
+            <T variant="title" accessibilityRole="header">Trips</T>
+            {segmented}
+          </>
+        )}
+        {shown.length && desktop ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: GRID_GAP, rowGap: 40 }}>
+            {shown.map((b) => (
+              <TripCard key={b.id} b={b} width={cardWidth} />
+            ))}
+          </View>
+        ) : shown.length ? (
           <View style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.light.line }}>
             {shown.map((b) => (
               <TripRow key={b.id} b={b} />
             ))}
           </View>
         ) : tab === 'upcoming' || all.length === 0 ? (
-          <View style={{ paddingTop: 140, paddingHorizontal: 16, alignItems: 'center', gap: 20 }}>
+          <View style={{ paddingTop: desktop ? 120 : 140, paddingHorizontal: 16, alignItems: 'center', gap: 20 }}>
             <T color="inkSecondary" align="center" style={{ maxWidth: 260 }}>
               No trips yet. Something's always open within 5 days.
             </T>
@@ -82,7 +149,7 @@ export default function Trips() {
             </PressScale>
           </View>
         ) : (
-          <T color="inkSecondary" align="center" style={{ paddingTop: 140 }}>No past trips yet.</T>
+          <T color="inkSecondary" align="center" style={{ paddingTop: desktop ? 120 : 140 }}>No past trips yet.</T>
         )}
       </ScrollView>
     </View>

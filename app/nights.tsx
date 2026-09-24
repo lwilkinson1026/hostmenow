@@ -5,16 +5,20 @@ import { useInsets } from '@/lib/insets';
 import { NavHeader } from '@/components/NavHeader';
 import { T } from '@/components/Text';
 import { fullDate, plural, toISODate, today } from '@/lib/dates';
+import { useColumn, useDesktop } from '@/lib/layout';
 import { unlockDate, useApp, useBankedNights } from '@/store/app';
 import { colors } from '@/theme';
 
 /** J. Nights bank. */
 export default function Nights() {
   const insets = useInsets();
+  const desktop = useDesktop();
+  const column = useColumn(640);
   const bank = useBankedNights();
   const { nightGrants: grants, unlockDays, membership } = useApp();
   return (
-    <View style={{ flex: 1, backgroundColor: colors.light.bg, paddingTop: insets.top - 5, paddingHorizontal: 24 }}>
+    <View style={{ flex: 1, backgroundColor: colors.light.bg }}>
+      <View style={[{ flex: 1, paddingTop: desktop ? 24 : insets.top - 5, paddingHorizontal: 24 }, column]}>
       <StatusBar style="dark" />
       <NavHeader title="Nights bank" />
       <View style={{ marginTop: 56, gap: 4 }}>
@@ -41,6 +45,7 @@ export default function Nights() {
           ? 'Your nights are frozen while your membership is paused. They still expire on schedule.'
           : 'Free nights are used oldest first. You get 5 more every year.'}
       </T>
+      </View>
     </View>
   );
 }

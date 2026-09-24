@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 
 import { CaptureStep } from '@/components/Capture';
+import { useDesktop } from '@/lib/layout';
 import { identity } from '@/services';
 import { useApp } from '@/store/app';
 import { colors } from '@/theme';
@@ -10,13 +11,14 @@ import { colors } from '@/theme';
 export default function Selfie() {
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const setIdStatus = useApp((s) => s.setIdStatus);
+  const d = useDesktop() ? 232 : 260;
   return (
     <CaptureStep
       kind="selfie"
       title="Now you."
       guide={
         <View
-          style={{ width: 260, height: 260, borderRadius: 130, borderWidth: 2, borderColor: colors.dark.ink, boxShadow: '0 0 0 2000px rgba(0,0,0,0.45)' }}
+          style={{ width: d, height: d, borderRadius: d / 2, borderWidth: 2, borderColor: colors.dark.ink, boxShadow: '0 0 0 2000px rgba(0,0,0,0.45)' }}
         />
       }
       guideLabel="Capture selfie"

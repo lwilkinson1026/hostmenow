@@ -10,6 +10,7 @@ import { T } from '@/components/Text';
 import { SEAT_RULES } from '@/config';
 import { member, type HostReferral } from '@/data/mock';
 import { plural } from '@/lib/dates';
+import { useColumn, useDesktop } from '@/lib/layout';
 import { haptics, invites } from '@/services';
 import { referralSeats, useApp, useInvitesLeft } from '@/store/app';
 import { colors } from '@/theme';
@@ -27,6 +28,8 @@ function hostLine(r: HostReferral, daysAhead: number) {
 /** K. Invites. Invites come from hosts the member brings, so members never outgrow the homes. */
 export default function Invites() {
   const insets = useInsets();
+  const desktop = useDesktop();
+  const column = useColumn(640);
   const { sentInvites, sendInvite, hostReferrals, sendHostInvite, referralDaysAhead } = useApp();
   const invitesLeft = useInvitesLeft();
   const [sharing, setSharing] = useState<'member' | 'host' | null>(null);
@@ -54,13 +57,13 @@ export default function Invites() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.light.bg }}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top - 5, paddingHorizontal: 24, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={[{ paddingTop: desktop ? 24 : insets.top - 5, paddingHorizontal: 24, paddingBottom: desktop ? 80 : 40 }, column]}>
         <NavHeader />
         <T variant="display" style={{ marginTop: 32 }}>Invite someone good.</T>
         <T color="inkSecondary" style={{ marginTop: 14 }}>
           {invitesLeft > 0 ? `You have ${plural(invitesLeft, 'invite')}. You're vouching for them.` : 'Bring a host to open more invites.'}
         </T>
-        <PrimaryButton style={{ marginTop: 32 }} label="Send an invite" loading={sharing === 'member'} disabled={invitesLeft === 0} onPress={share} />
+        <PrimaryButton style={[{ marginTop: 32 }, desktop && styles.buttonDesktop]} label="Send an invite" loading={sharing === 'member'} disabled={invitesLeft === 0} onPress={share} />
 
         <T variant="calloutStrong" color="inkSecondary" style={{ marginTop: 48 }}>Sent</T>
         <View style={styles.list}>
@@ -98,6 +101,7 @@ export default function Invites() {
 }
 
 const styles = StyleSheet.create({
+  buttonDesktop: { alignSelf: 'flex-start', width: 360 },
   list: { marginTop: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.light.line },
   row: {
     flexDirection: 'row',

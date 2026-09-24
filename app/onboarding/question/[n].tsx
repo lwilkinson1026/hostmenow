@@ -1,9 +1,10 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { Easing, cancelAnimation, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useInsets } from '@/lib/insets';
+import { useDesktop } from '@/lib/layout';
 import Svg, { Circle } from 'react-native-svg';
 
 import { CameraSurface } from '@/components/CameraSurface';
@@ -13,7 +14,7 @@ import { PressScale } from '@/components/PressScale';
 import { T } from '@/components/Text';
 import { introQuestions } from '@/data/mock';
 import { haptics } from '@/services';
-import { colors } from '@/theme';
+import { colors, radius } from '@/theme';
 
 const SECONDS = 15;
 const R = 44;
@@ -27,6 +28,8 @@ export default function Question() {
   const { n: nParam, mode } = useLocalSearchParams<{ n: string; mode?: string }>();
   const n = Math.min(Math.max(Number(nParam) || 1, 1), introQuestions.length);
   const insets = useInsets();
+  const desktop = useDesktop();
+  const { height: windowHeight } = useWindowDimensions();
   const [phase, setPhase] = useState<Phase>('ready');
   const [left, setLeft] = useState(SECONDS);
   const progress = useSharedValue(0);
@@ -87,6 +90,69 @@ export default function Question() {
   const onButton = phase === 'ready' ? start : phase === 'recording' ? stop : next;
   const buttonLabel = phase === 'ready' ? 'Record answer' : phase === 'recording' ? 'Stop recording' : 'Next question';
 
+  const recordButton = (
+    <PressScale accessibilityRole="button" accessibilityLabel={buttonLabel} onPress={onButton} style={{ width: 100, height: 100, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg width={100} height={100} viewBox="0 0 100 100" style={[StyleSheet.absoluteFill, { transform: [{ rotate: '-90deg' }] }]}>
+        <Circle cx={50} cy={50} r={R} fill="none" stroke="rgba(245,245,244,0.28)" strokeWidth={4} />
+        <AnimatedCircle cx={50} cy={50} r={R} fill="none" stroke={colors.dark.ink} strokeWidth={4} strokeLinecap="round" animatedProps={ring} />
+      </Svg>
+      {phase === 'recording' ? (
+        <View style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: colors.dark.ink }} />
+      ) : (
+        <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: colors.dark.ink }} />
+      )}
+    </PressScale>
+  );
+  const underButton = (
+    <View style={{ minHeight: 44, justifyContent: 'center' }}>
+      {phase === 'ready' ? (
+        <T variant="caption" tone="dark" color="inkSecondary">15 seconds</T>
+      ) : phase === 'recording' ? (
+        <T variant="calloutStrong" tone="dark" style={{ fontVariant: ['tabular-nums'] }}>{`0:${String(left).padStart(2, '0')}`}</T>
+      ) : (
+        <Pressable accessibilityRole="button" onPress={retake} hitSlop={8} style={{ minHeight: 44, justifyContent: 'center' }}>
+          <T variant="calloutStrong" tone="dark">Retake</T>
+        </Pressable>
+      )}
+    </View>
+  );
+  const close = (style: object) =>
+    mode === 'rerecord' ? (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Close"
+        hitSlop={8}
+        onPress={() => {
+          clear();
+          router.dismissTo('/you');
+        }}
+        style={[{ position: 'absolute', width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }, style]}
+      >
+        <HostIcon name="close" size={18} color={colors.dark.ink} />
+      </Pressable>
+    ) : null;
+
+  if (desktop) {
+    // Desktop: the question, a 9:16 camera tile and the record button, centered over the onboarding photo.
+    const tileHeight = Math.min(Math.max(windowHeight - 400, 320), 540);
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, paddingVertical: 48 }}>
+        <StatusBar style="light" />
+        <View style={{ width: '100%', maxWidth: 680, alignItems: 'center' }}>
+          <T variant="title" tone="dark" align="center">{introQuestions[n - 1]}</T>
+          <View style={{ marginTop: 32, height: tileHeight, aspectRatio: 9 / 16, borderRadius: radius.card, overflow: 'hidden', backgroundColor: colors.dark.bg }}>
+            <CameraSurface facing="front" />
+          </View>
+          <View style={{ marginTop: 24, alignItems: 'center', gap: 10 }}>
+            {recordButton}
+            {underButton}
+          </View>
+        </View>
+        {close({ right: 24, top: 24 })}
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.dark.bg }}>
       <StatusBar style="light" />
@@ -105,44 +171,11 @@ export default function Question() {
       >
         {introQuestions[n - 1]}
       </T>
-      {mode === 'rerecord' ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Close"
-          hitSlop={8}
-          onPress={() => {
-            clear();
-            router.dismissTo('/you');
-          }}
-          style={{ position: 'absolute', right: 16, top: insets.top + 16, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
-        >
-          <HostIcon name="close" size={18} color={colors.dark.ink} />
-        </Pressable>
-      ) : null}
+      {close({ right: 16, top: insets.top + 16 })}
 
       <View style={{ position: 'absolute', left: 0, right: 0, bottom: Math.max(insets.bottom, 16) + 14, alignItems: 'center', gap: 10 }}>
-        <PressScale accessibilityRole="button" accessibilityLabel={buttonLabel} onPress={onButton} style={{ width: 100, height: 100, alignItems: 'center', justifyContent: 'center' }}>
-          <Svg width={100} height={100} viewBox="0 0 100 100" style={[StyleSheet.absoluteFill, { transform: [{ rotate: '-90deg' }] }]}>
-            <Circle cx={50} cy={50} r={R} fill="none" stroke="rgba(245,245,244,0.28)" strokeWidth={4} />
-            <AnimatedCircle cx={50} cy={50} r={R} fill="none" stroke={colors.dark.ink} strokeWidth={4} strokeLinecap="round" animatedProps={ring} />
-          </Svg>
-          {phase === 'recording' ? (
-            <View style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: colors.dark.ink }} />
-          ) : (
-            <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: colors.dark.ink }} />
-          )}
-        </PressScale>
-        <View style={{ minHeight: 44, justifyContent: 'center' }}>
-          {phase === 'ready' ? (
-            <T variant="caption" tone="dark" color="inkSecondary">15 seconds</T>
-          ) : phase === 'recording' ? (
-            <T variant="calloutStrong" tone="dark" style={{ fontVariant: ['tabular-nums'] }}>{`0:${String(left).padStart(2, '0')}`}</T>
-          ) : (
-            <Pressable accessibilityRole="button" onPress={retake} hitSlop={8} style={{ minHeight: 44, justifyContent: 'center' }}>
-              <T variant="calloutStrong" tone="dark">Retake</T>
-            </Pressable>
-          )}
-        </View>
+        {recordButton}
+        {underButton}
       </View>
     </View>
   );

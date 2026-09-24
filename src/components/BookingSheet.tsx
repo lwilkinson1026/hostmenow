@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useMemo, useState } from 'react';
+import { forwardRef, useMemo, useState } from 'react';
 import { StyleSheet, Switch, View } from 'react-native';
 
 import { freeNightsAt, type Listing } from '@/data/mock';
@@ -20,8 +20,24 @@ const DAYS_SHOWN = 10;
 
 type Props = { listing: Listing; onBooked: (b: Booking) => void };
 
-/** E. Book. Tap the first and last night, guests, the breakdown, Apple Pay. */
+type PanelProps = Props & {
+  onPayingChange?: (paying: boolean) => void;
+  /** Checks before paying (paused membership, ID). Resolve false to stop. */
+  beforePay?: () => Promise<boolean>;
+};
+
+/** E. Book, as a bottom sheet (phones). */
 export const BookingSheet = forwardRef<SheetRef, Props>(function BookingSheet({ listing, onBooked }, ref) {
+  const [paying, setPaying] = useState(false);
+  return (
+    <Sheet ref={ref} dismissible={!paying}>
+      <BookingPanel listing={listing} onBooked={onBooked} onPayingChange={setPaying} />
+    </Sheet>
+  );
+});
+
+/** E. Book. Tap the first and last night, guests, the breakdown, Apple Pay. Inline on the desktop listing page. */
+export function BookingPanel({ listing, onBooked, onPayingChange, beforePay }: PanelProps) {
   const usable = useFreeNights();
   const { range: exploreRange, book, nightGrants, unlockDays } = useApp();
   const banked = freeNightsOf(nightGrants);
@@ -42,7 +58,12 @@ export const BookingSheet = forwardRef<SheetRef, Props>(function BookingSheet({ 
   const [useFree, setUseFree] = useState(true);
   const [paying, setPaying] = useState(false);
 
-  useEffect(() => setRange(initial), [initial]);
+  // Reset the nights when the starting point changes (adjusting state during render, not in an effect).
+  const [seenInitial, setSeenInitial] = useState(initial);
+  if (seenInitial !== initial) {
+    setSeenInitial(initial);
+    setRange(initial);
+  }
 
   const nights = range ? nightsIn(range) : 0;
   // Free nights here are the member's bank, within the host's monthly cap.
@@ -56,16 +77,19 @@ export const BookingSheet = forwardRef<SheetRef, Props>(function BookingSheet({ 
 
   const pay = async () => {
     if (paying || !range || !inDate) return;
+    if (beforePay && !(await beforePay())) return;
     setPaying(true);
+    onPayingChange?.(true);
     await payments.payStay(price.total, 'apple_pay');
     haptics.success();
     const booking = book({ listingId: listing.id, checkIn: toISODate(inDate), nights, guests, price, paidWith: 'apple_pay' });
     setPaying(false);
+    onPayingChange?.(false);
     onBooked(booking);
   };
 
   return (
-    <Sheet ref={ref} dismissible={!paying}>
+    <>
       <T variant="heading" style={{ marginBottom: 4 }}>Your stay</T>
       <T variant="caption" color="inkSecondary" style={{ marginBottom: 12 }}>
         {range && inDate && outDate
@@ -118,6 +142,6 @@ export const BookingSheet = forwardRef<SheetRef, Props>(function BookingSheet({ 
       ) : null}
 
       <PayButton style={{ marginTop: 24 }} loading={paying} disabled={!range} onPress={pay} />
-    </Sheet>
+    </>
   );
-});
+}

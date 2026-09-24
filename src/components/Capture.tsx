@@ -2,9 +2,10 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useInsets } from '@/lib/insets';
+import { useDesktop } from '@/lib/layout';
 
 import { haptics, identity } from '@/services';
-import { colors } from '@/theme';
+import { colors, radius } from '@/theme';
 import { CameraSurface } from './CameraSurface';
 import { OnboardingScreen, useTitleTop } from './Onboarding';
 import { T } from './Text';
@@ -26,6 +27,7 @@ type Props = {
 export function CaptureStep({ title, kind, guide, guideLabel, guideTop, hint, status, onCaptured }: Props) {
   const top = useTitleTop(26);
   const insets = useInsets();
+  const desktop = useDesktop();
   const done = useRef(false);
 
   const capture = async () => {
@@ -45,6 +47,31 @@ export function CaptureStep({ title, kind, guide, guideLabel, guideTop, hint, st
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []),
   );
+
+  if (desktop) {
+    // Desktop: the camera is a framed tile in the centered column, not the whole window.
+    return (
+      <OnboardingScreen>
+        <T variant="title" tone="dark">{title}</T>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={guideLabel}
+          onPress={capture}
+          style={styles.tile}
+        >
+          <CameraSurface facing={kind === 'id' ? 'back' : 'front'} />
+          {guide}
+        </Pressable>
+        <T variant="callout" tone="dark" color="inkSecondary" align="center" style={{ marginTop: 24 }}>
+          {hint}
+        </T>
+        <View style={[styles.status, { position: 'relative', marginTop: 32 }]}>
+          <View style={styles.dot} />
+          <T variant="caption" tone="dark" color="inkSecondary">{status}</T>
+        </View>
+      </OnboardingScreen>
+    );
+  }
 
   return (
     <OnboardingScreen background={<CameraSurface facing={kind === 'id' ? 'back' : 'front'} />} contentStyle={{ paddingHorizontal: 0 }}>
@@ -67,5 +94,15 @@ export function CaptureStep({ title, kind, guide, guideLabel, guideTop, hint, st
 
 const styles = StyleSheet.create({
   status: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
+  tile: {
+    marginTop: 32,
+    width: '100%',
+    aspectRatio: 4 / 3,
+    borderRadius: radius.card,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.dark.bg,
+  },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.dark.ink },
 });

@@ -3,6 +3,7 @@ import { View, useWindowDimensions } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { CaptureStep } from '@/components/Capture';
+import { useDesktop } from '@/lib/layout';
 import { colors } from '@/theme';
 
 /** Rounded rectangle guide with corner brackets, dimming everything outside it. */
@@ -26,11 +27,12 @@ function IdGuide({ w }: { w: number }) {
 export default function IdScan() {
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const { width } = useWindowDimensions();
+  const desktop = useDesktop();
   return (
     <CaptureStep
       kind="id"
       title="Your ID."
-      guide={<IdGuide w={Math.min(width, 430) - 48} />}
+      guide={<IdGuide w={desktop ? 384 : Math.min(width, 430) - 48} />}
       guideLabel="Capture ID"
       guideTop={170}
       hint="Driver's license or passport. We never share it."

@@ -7,16 +7,17 @@ import { PressScale } from './PressScale';
 import { PriceLine } from './PriceLine';
 import { T } from './Text';
 
-type Props = { listing: Listing; free: boolean; onPress: () => void };
+type Props = { listing: Listing; free: boolean; onPress: () => void; /** Desktop: pointer over the card (highlights its map pin). */ onHoverIn?: () => void };
 
 /** 4:5 photo, radius 12. Name, region, price line. */
-export function ListingCard({ listing, free, onPress }: Props) {
+export function ListingCard({ listing, free, onPress, onHoverIn }: Props) {
   const cover = listing.photos[0];
   return (
     <PressScale
       accessibilityRole="link"
       accessibilityLabel={`${listing.name}, ${listing.region}`}
       onPress={onPress}
+      onHoverIn={onHoverIn}
       scaleTo={0.985}
       style={{ gap: 12 }}
     >

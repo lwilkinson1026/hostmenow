@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { useInsets } from '@/lib/insets';
+import { useDesktop } from '@/lib/layout';
 
 import { PrimaryButton } from '@/components/Buttons';
 import { OnboardingScreen, useTitleTop } from '@/components/Onboarding';
@@ -14,11 +15,12 @@ import { colors } from '@/theme';
 export default function HouseRules() {
   const top = useTitleTop();
   const insets = useInsets();
+  const desktop = useDesktop();
   const verifying = useApp((s) => s.idStatus === 'verifying');
   return (
     <OnboardingScreen actions={<PrimaryButton tone="dark" label="I'm in" onPress={() => router.push('/onboarding/say-hello')} />}>
       {verifying ? (
-        <View style={{ position: 'absolute', left: 24, top: insets.top + 13, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={[desktop ? { marginBottom: 24 } : { position: 'absolute', left: 24, top: insets.top + 13 }, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
           <Spinner size={14} tone="dark" />
           <T variant="caption" tone="dark" color="inkSecondary">Verifying in the background</T>
         </View>

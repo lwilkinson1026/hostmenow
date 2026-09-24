@@ -1,6 +1,7 @@
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useInsets } from '@/lib/insets';
+import { useDesktop } from '@/lib/layout';
 
 import { haptics } from '@/services';
 import { colors } from '@/theme';
@@ -13,6 +14,8 @@ const labels: Record<string, string> = { explore: 'Explore', trips: 'Trips', you
 /** Three tabs. Hairline top border, no tint. Filled icon only for the selected tab. */
 export function TabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useInsets();
+  // Desktop web: the tabs live in the top nav (DesktopNav).
+  if (useDesktop()) return null;
   return (
     <View
       accessibilityRole="tablist"
