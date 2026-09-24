@@ -7,15 +7,16 @@ import { HostIcon, type HostIconName } from '@/components/host/HostIcon';
 import { hs, money0 } from '@/components/host/HostUI';
 import { PressScale } from '@/components/PressScale';
 import { T } from '@/components/Text';
-import { host, hostListings, memberStayEvents, notices, quarter } from '@/data/host';
+import { host, hostListings, memberStayEvents, notices, quarterStays } from '@/data/host';
 import { fromISODate, monthDay, plural } from '@/lib/dates';
 import { useInsets } from '@/lib/insets';
 import { estimate, money10, networkFor, nextPoolPayout } from '@/lib/estimate';
 import { accruedPool, poolPerDay, quarterStart } from '@/lib/poolAccrual';
+import { hostPayout, priceStay } from '@/lib/pricing';
 import { covered, fmtNights, replay } from '@/lib/shareLedger';
 import { haptics } from '@/services';
 import { hostPrefill, invitesLeft, useHost } from '@/store/host';
-import { BRAND } from '@/config';
+import { BRAND, PRICING_CONFIG } from '@/config';
 
 function greeting() {
   const h = new Date().getHours();
@@ -49,7 +50,7 @@ function InviteCard() {
           <T style={{ color: hs.muted }}> a year from the pool</T>
         </T>
         <T variant="callout" style={{ color: hs.muted, lineHeight: 21 }}>
-          A share of every membership for your {prefill.homes} listings. About {money10(e.total)} a year in all.
+          Nearly half of every membership goes to hosts. About {money10(e.total)} a year in all from your {prefill.homes} listings.
         </T>
       </View>
       <PressScale
@@ -68,6 +69,19 @@ function InviteCard() {
 
 /** Share-night credits from member stays, from the reservation events Hostshare receives. */
 const ledger = replay(memberStayEvents);
+
+/** This quarter's payout statement (Revision 03): card fees come off stays and cleaning, never the pool. */
+const statement = quarterStays.reduce(
+  (acc, st) => {
+    const l = hostListings.find((x) => x.id === st.listingId)!;
+    const nights = st.freeNights + st.paidNights;
+    const p = hostPayout(priceStay({ retailNight: l.rate, cleaning: l.cleaning }, nights, st.freeNights));
+    return { paidNights: acc.paidNights + st.paidNights, stays: acc.stays + p.stays, cleaning: acc.cleaning + p.cleaning, cardFees: acc.cardFees + p.cardFees };
+  },
+  { paidNights: 0, stays: 0, cleaning: 0, cardFees: 0 },
+);
+const pct = (r: number) => `${+(r * 100).toFixed(1)}%`;
+const payoutNet = statement.stays + statement.cleaning - statement.cardFees;
 
 /** Re-render every `ms` so the running total keeps up with the clock. */
 function useNow(ms: number) {
@@ -121,7 +135,7 @@ function EarningsCard() {
   };
   const pool = accruedPool(opted.map(toAccrual), s.pauses, quarterStart(new Date(now)).getTime(), now);
   const perDay = (rows: typeof opted) => rows.reduce((sum, r) => sum + poolPerDay(toAccrual(r)), 0);
-  const total = quarter.paidStays.amount + pool;
+  const total = payoutNet + pool;
 
   return (
     <View style={styles.light}>
@@ -144,8 +158,16 @@ function EarningsCard() {
 
       <View style={{ marginTop: 12, borderTopWidth: 1, borderTopColor: hs.line }}>
         <View style={styles.row}>
-          <T variant="callout">Paid stays · {quarter.paidStays.nights} nights</T>
-          <T variant="calloutStrong" style={{ fontVariant: ['tabular-nums'] }}>{money0(quarter.paidStays.amount)}</T>
+          <T variant="callout">Paid stays · {statement.paidNights} nights, after {pct(PRICING_CONFIG.platform_take_on_paid_stays)} fee</T>
+          <T variant="calloutStrong" style={{ fontVariant: ['tabular-nums'] }}>{money0(statement.stays)}</T>
+        </View>
+        <View style={styles.row}>
+          <T variant="callout">Cleaning fees · {quarterStays.length} stays</T>
+          <T variant="calloutStrong" style={{ fontVariant: ['tabular-nums'] }}>{money0(statement.cleaning)}</T>
+        </View>
+        <View style={styles.row}>
+          <T variant="callout">Card fees ({pct(PRICING_CONFIG.host_card_fee_rate)})</T>
+          <T variant="calloutStrong" style={{ fontVariant: ['tabular-nums'] }}>-{money0(statement.cardFees)}</T>
         </View>
         {host.tier === 'Pro' || host.tier === 'Pro+' ? (
           <View style={styles.row}>

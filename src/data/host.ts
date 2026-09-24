@@ -11,6 +11,7 @@ export type HostListing = {
   openNights: number;
   /** Hostshare earn rate (0.5x to 4x), used for share-night credit. */
   earnRate: number;
+  cleaning: number;
   eligible: boolean;
   reason?: string;
 };
@@ -34,12 +35,12 @@ export const host = {
 };
 
 export const hostListings: HostListing[] = [
-  { id: 'orchard', name: 'Orchard House', city: 'Yakima, WA', rate: 260, openNights: 8, earnRate: 1.4, eligible: true },
-  { id: 'cedar', name: 'Cedar A-Frame', city: 'Leavenworth, WA', rate: 220, openNights: 8, earnRate: 1.2, eligible: true },
-  { id: 'loft', name: 'Downtown Loft', city: 'Yakima, WA', rate: 150, openNights: 8, earnRate: 0.8, eligible: true },
+  { id: 'orchard', name: 'Orchard House', city: 'Yakima, WA', rate: 260, openNights: 8, earnRate: 1.4, cleaning: 110, eligible: true },
+  { id: 'cedar', name: 'Cedar A-Frame', city: 'Leavenworth, WA', rate: 220, openNights: 8, earnRate: 1.2, cleaning: 85, eligible: true },
+  { id: 'loft', name: 'Downtown Loft', city: 'Yakima, WA', rate: 150, openNights: 8, earnRate: 0.8, cleaning: 65, eligible: true },
   // Opting in requires last-minute (5-day) availability turned on in Share Settings.
-  { id: 'river', name: 'River Studio', city: 'Ellensburg, WA', rate: 130, openNights: 0, earnRate: 0.7, eligible: false, reason: 'Turn on last-minute availability first' },
-  { id: 'chelan', name: 'Lake Chelan Cabin', city: 'Chelan, WA', rate: 240, openNights: 8, earnRate: 1.3, eligible: false, reason: 'Not live on Hostshare yet' },
+  { id: 'river', name: 'River Studio', city: 'Ellensburg, WA', rate: 130, openNights: 0, earnRate: 0.7, cleaning: 60, eligible: false, reason: 'Turn on last-minute availability first' },
+  { id: 'chelan', name: 'Lake Chelan Cabin', city: 'Chelan, WA', rate: 240, openNights: 8, earnRate: 1.3, cleaning: 95, eligible: false, reason: 'Not live on Hostshare yet' },
 ];
 
 export const pastGuests = [
@@ -48,10 +49,14 @@ export const pastGuests = [
   { id: 's', name: 'Sam Keller', meta: 'Stayed at Downtown Loft in June' },
 ];
 
-/** Mock quarter activity shown on the earnings card after opt-in. */
-export const quarter = {
-  paidStays: { nights: 5, amount: 484 },
-};
+/** Member stays completed on this host's listings this quarter, for the payout statement. */
+export const quarterStays = [
+  { bookingId: 'hm-095', listingId: 'cedar', freeNights: 0, paidNights: 2 },
+  { bookingId: 'hm-090', listingId: 'orchard', freeNights: 0, paidNights: 2 },
+  { bookingId: 'hm-101', listingId: 'cedar', freeNights: 2, paidNights: 0 },
+  { bookingId: 'hm-102', listingId: 'loft', freeNights: 1, paidNights: 1 },
+  { bookingId: 'hm-103', listingId: 'cedar', freeNights: 1, paidNights: 0 },
+];
 
 /** Recent hostmenow activity on the host's listings, newest first. */
 export const notices = [
@@ -61,7 +66,7 @@ export const notices = [
 
 export const hostTerms = [
   'Members only book nights within 5 days of check-in.',
-  `Paid stays are 50% of your nightly rate. ${BRAND} keeps 12%. Cleaning fees are yours.`,
+  `Paid stays are 50% of your nightly rate. ${BRAND} keeps 15%. Card fees of 2.9% come out of your stay and cleaning payouts.`,
   "Free member stays count toward your Hostshare share nights. Paid stays don't.",
   "Pool shares are paid quarterly. Estimates aren't guaranteed.",
   "You can't decline a member based on their photo or video.",

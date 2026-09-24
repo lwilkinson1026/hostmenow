@@ -7,7 +7,7 @@ import { PrimaryButton, TextButton } from '@/components/Buttons';
 import { LearnPrelude } from '@/components/LearnPrelude';
 import { DriftBackground } from '@/components/DriftBackground';
 import { T, Wordmark } from '@/components/Text';
-import { BRAND, MEMBERSHIP_MONTHLY } from '@/config';
+import { BOOKING_FEE, BRAND, MEMBERSHIP_MONTHLY } from '@/config';
 import { useInsets } from '@/lib/insets';
 import { pageColorsFor, setPageBackground } from '@/lib/webChrome';
 import { useReducedMotion } from 'react-native-reanimated';
@@ -20,7 +20,7 @@ const steps = [
   },
   {
     title: 'Get 5 free nights a year.',
-    body: 'Stay at private homes and pay only the cleaning fee and taxes. After your free nights, every night is 50% off. Unused free nights roll over for 5 years.',
+    body: `Stay at private homes and pay only the cleaning fee, taxes and a $${BOOKING_FEE} booking fee. After your free nights, every night is 50% off. Unused free nights roll over for 5 years.`,
   },
   {
     title: 'Book within 5 days.',
@@ -36,9 +36,9 @@ const vetting = [
 ];
 
 const hostPoints = [
-  { title: 'Half-price stays', body: 'Members pay 50% of your nightly rate. You keep 88% of that.' },
-  { title: 'Cleaning fees are yours', body: 'In full, on every stay, free or paid.' },
-  { title: 'A share of every membership', body: '60% of membership revenue goes to hosts each quarter, for the members you host and the nights you open.' },
+  { title: 'Half-price stays', body: 'Members pay 50% of your nightly rate. You keep 85%, less card fees.' },
+  { title: 'Cleaning fees are yours', body: 'On every stay, free or paid, less card fees.' },
+  { title: 'Nearly half of every membership', body: 'Goes to hosts each quarter, for the members you host and the nights you open.' },
   { title: 'Counts toward your sharing', body: 'Free member stays count toward the nights you share on Hostshare.' },
   { title: 'Only last-minute nights', body: 'Members book within 5 days of arrival, after your regular guests and Hostshare travelers have had their chance.' },
 ];
@@ -54,7 +54,7 @@ const faqs = [
   },
   {
     q: 'What if my plans change?',
-    a: 'Cancel 24 hours or more before check-in and your free nights go back to your bank.',
+    a: 'Cancel 24 hours or more before check-in and your free nights and booking fee come back to you.',
   },
   {
     q: 'What if I pause my membership?',

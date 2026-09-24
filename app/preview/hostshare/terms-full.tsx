@@ -29,8 +29,8 @@ const sections: { title: string; body: string[] }[] = [
   {
     title: "How you're paid",
     body: [
-      `Paid stays are 50% of your nightly rate. ${BRAND} keeps 12% of that and you receive the rest with your Hostshare payouts. Cleaning fees are yours in full on every stay, free or paid.`,
-      "You also earn a share of membership revenue each quarter, based on the free member nights you host and the nights you make available. It is paid 15 days after the quarter ends. Amounts under $25 roll forward. Estimates aren't guaranteed.",
+      `Paid stays are 50% of your nightly rate. ${BRAND} keeps 15% of that and you receive the rest with your Hostshare payouts. Cleaning fees are yours on every stay, free or paid. Card fees of 2.9% come out of your stay and cleaning payouts, never out of pool shares.`,
+      `Nearly half of every membership goes to hosts. Each quarter, 45% of membership revenue, plus a quarter of what ${BRAND} keeps on paid stays, is shared among hosts based on the free member nights you host and the nights you make available. It is paid 15 days after the quarter ends. Amounts under $25 roll forward. Estimates aren't guaranteed.`,
       'Pool payouts are reported on a 1099.',
     ],
   },

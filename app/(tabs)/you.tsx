@@ -81,7 +81,11 @@ export default function You() {
           <Row
             label="Membership"
             value={membership === 'paused' ? 'Paused' : `$${MEMBERSHIP_MONTHLY} a month · renews ${monthDay(nextMonthly(member.joined))}`}
-            onPress={membership === 'paused' ? () => router.push({ pathname: '/onboarding/pay', params: { mode: 'resume' } }) : undefined}
+            onPress={() =>
+              membership === 'paused'
+                ? router.push({ pathname: '/onboarding/pay', params: { mode: 'resume' } })
+                : router.push('/membership')
+            }
             chevron
           />
         </View>

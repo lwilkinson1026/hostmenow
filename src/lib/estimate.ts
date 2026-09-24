@@ -9,13 +9,17 @@
  * GET /hostmenow/network-stats, with the honesty floor below.
  */
 
+import { PRICING_CONFIG } from '../config.ts';
+
+/** From the versioned pricing config (Revision 03), plus the pool engine's fixed rules. */
 export const PRICING = {
-  membershipPerYear: 240, // $20/month
-  poolShareOfMembership: 0.6,
-  platformTake: 0.12, // on 50% paid stays
-  poolShareOfTake: 0.25,
+  membershipPerYear: PRICING_CONFIG.membership_monthly_usd * 12, // $25/month
+  poolShareOfMembership: PRICING_CONFIG.pool_share_of_membership, // 45%
+  platformTake: PRICING_CONFIG.platform_take_on_paid_stays, // 15% of 50% paid stays
+  hostCardFee: PRICING_CONFIG.host_card_fee_rate, // 2.9%, deducted from host payouts
+  poolShareOfTake: PRICING_CONFIG.pool_share_of_take,
   hostedSplit: 0.75, // pool split: hosted points vs available points
-  paidDiscount: 0.5,
+  paidDiscount: PRICING_CONFIG.paid_night_discount,
   rateWeightBase: 150, // W = clamp(rate / 150, 0.5, 3)
 } as const;
 
@@ -82,7 +86,8 @@ export function estimate({ homes, rate, openPerMonth, quality = 1.0, paidOnly = 
   const wN = W(net.avgRate);
   const poolHosted = (P.hostedSplit * pool * (hostFree * wH)) / (Math.min(netFree, netAvail) * wN);
   const poolAvail = ((1 - P.hostedSplit) * pool * (hostAvail * wH * (paidOnly ? 0.5 : 1))) / (netAvail * wN);
-  const paid = hostPaid * rate * P.paidDiscount * (1 - P.platformTake);
+  // Host card fees come out of paid-stay payouts (never out of pool payouts).
+  const paid = hostPaid * rate * P.paidDiscount * (1 - P.platformTake - P.hostCardFee);
 
   return {
     poolHosted,

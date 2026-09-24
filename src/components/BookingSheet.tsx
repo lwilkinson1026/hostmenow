@@ -85,6 +85,7 @@ export const BookingSheet = forwardRef<SheetRef, Props>(function BookingSheet({ 
         {price.paidNights > 0 ? <LineItem label={`${plural(price.paidNights, 'night')} at 50%`} value={money(price.nightsCost)} /> : null}
         <LineItem label="Cleaning" value={money(price.cleaning)} />
         <LineItem label="Taxes" value={money(price.taxes)} />
+        <LineItem label="Booking fee" value={money(price.bookingFee)} />
         <LineItem strong label="Total" value={money(price.total)} />
       </View>
 

@@ -144,7 +144,11 @@ Add a hidden dev menu (long-press the wordmark on Explore) to switch mock states
 - Bookable only within 5 days of check-in, so the date chips always show today +1 through today +5.
 - Each member gets 5 free nights a year; the guest pays only cleaning and taxes on those nights. After the free nights run out, nights are 50% of the home's retail rate. Free nights are used oldest first and expire 5 years after they are granted.
 - "Use free nights" toggle in the booking sheet, on by default.
-- Membership is $99 for the first year, then $20 a month.
+- Pricing follows Revision 03 (margin plan), from the versioned config in `src/config.ts` (`PRICING_CONFIGS`); never hardcode rates:
+  - Membership $25 a month. A $20 booking fee per booking (free or paid), platform revenue, not pooled.
+  - Pool = 45% of membership revenue + 25% of the platform fee. Platform keeps 15% of paid (50%) stays.
+  - Host card fees (2.9%) come off paid-stay and cleaning payouts, never pool payouts.
+  - Host figures come only from `estimate()` in `src/lib/estimate.ts`; booking and payout math from `src/lib/pricing.ts`.
 
 ## Open decisions (ask Landon, don't guess)
 

@@ -68,11 +68,13 @@ export default function Trip() {
   const cover = listing.photos[0];
   const p = booking.price;
 
+  // Free nights and the booking fee come back together when a free stay is cancelled 24h+ ahead.
+  // Otherwise the booking fee follows the paid-night policy for the booking.
   const cancelDetail = () => {
     if (p.free === 0) return undefined;
     const n = plural(p.free, 'free night');
     return freeNightsRefundable(booking)
-      ? `Your ${n} ${p.free === 1 ? 'goes' : 'go'} back to your bank.`
+      ? `Your ${n} and the ${money(p.bookingFee)} booking fee go back to you.`
       : `It's less than 24 hours to check-in, so your ${n} won't come back.`;
   };
 
@@ -140,6 +142,7 @@ export default function Trip() {
               {p.paidNights > 0 ? <LineItem pad={8} label={`${plural(p.paidNights, 'night')} at 50%`} value={money(p.nightsCost)} /> : null}
               <LineItem pad={8} label="Cleaning" value={money(p.cleaning)} />
               <LineItem pad={8} label="Taxes" value={money(p.taxes)} />
+              {p.bookingFee ? <LineItem pad={8} label="Booking fee" value={money(p.bookingFee)} /> : null}
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 10 }}>
                 <T variant="calloutStrong">Paid · {booking.paidWith === 'apple_pay' ? 'Apple Pay' : 'Card'}</T>
                 <T variant="calloutStrong">{money(p.total)}</T>

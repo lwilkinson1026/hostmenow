@@ -12,7 +12,7 @@ pnpm start        # scan the QR code with Expo Go on an iPhone
 pnpm web          # web: landing at full width, the app as a centered phone column
 pnpm typecheck
 pnpm lint
-pnpm test         # range picking and share-credit ledger rules
+pnpm test         # range picking, share-credit ledger, estimate fixtures, booking fees and payouts
 ```
 
 Cameras only run on a real device. On the simulator and on web, the ID, selfie and video screens show a dark placeholder and still auto-advance.

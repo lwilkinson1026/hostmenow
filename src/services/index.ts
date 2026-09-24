@@ -1,4 +1,5 @@
 // The single seam between the prototype and real providers.
+export * as analytics from './analytics';
 export * as auth from './auth';
 export * as identity from './identity';
 export * as invites from './invites';

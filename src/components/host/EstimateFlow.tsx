@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
+import { BRAND } from '@/config';
 import { PressScale } from '@/components/PressScale';
 import { T } from '@/components/Text';
 import { estimate, money10, networkFor, type EstimateInput, type Stage } from '@/lib/estimate';
@@ -105,14 +106,14 @@ export function EstimateResult({ inputs, stage, onStage }: { inputs: Inputs; sta
           <T style={{ color: '#FFFFFF', opacity: 0.75 }}> a year</T>
         </T>
         <T variant="callout" style={{ color: '#FFFFFF', opacity: 0.8, lineHeight: 21 }}>
-          A share of every membership, paid to you each quarter for being open.
+          Nearly half of every membership goes to hosts, paid each quarter.
         </T>
       </View>
 
       <View style={{ marginTop: 8 }}>
         <Row label="Pool: members you host" sub={`About ${free} free ${free === 1 ? 'night' : 'nights'} a year`} value={money10(e.poolHosted)} />
         <Row label="Pool: nights you leave open" sub="Paid even when nobody books" value={money10(e.poolAvail)} />
-        <Row label="Half-price stays" sub={`About ${paid} ${paid === 1 ? 'night' : 'nights'} at $${Math.round(e.memberRate)}, after 12% fee`} value={money10(e.paid)} />
+        <Row label="Half-price stays" sub={`About ${paid} ${paid === 1 ? 'night' : 'nights'} at $${Math.round(e.memberRate)}, after fees`} value={money10(e.paid)} />
         <Row total label="Total" value={money10(e.total)} />
       </View>
 
@@ -130,7 +131,7 @@ export function EstimateResult({ inputs, stage, onStage }: { inputs: Inputs; sta
       <T variant="caption" color="inkSecondary" style={{ marginTop: 8 }}>
         {stage === 'launch'
           ? 'The pool grows as members join. Every new member adds to it.'
-          : 'Same homes, same nights, with 8,000 members on hostmenow.'}
+          : `Same homes, same nights, with 8,000 members on ${BRAND}.`}
       </T>
 
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 16, alignItems: 'flex-start' }}>
