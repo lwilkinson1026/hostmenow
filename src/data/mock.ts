@@ -180,7 +180,6 @@ export const member = {
   initials: 'JE',
   memberSince: '2026-09',
   invitedBy: { name: 'Sarah Chen', initials: 'SC' },
-  invitesLeft: 3,
   joined: '2026-09-23',
   nightGrants: [{ nights: 5, used: 0, granted: '2026-09-23', expires: '2031-09-23' }] as NightGrant[],
 };
@@ -191,6 +190,33 @@ export const sentInvites: SentInvite[] = [
   { name: 'Maya Ortiz', initials: 'MO', status: 'Joined Sep 20' },
   { name: null, initials: null, status: 'Link sent Sep 22 · expires in 5 days' },
 ];
+
+/**
+ * Hosts this member brought to hostmenow. Invites come from these: each home that
+ * joins opens seats (src/lib/seats.ts) once it has been live 30 days, one in three
+ * for the member who brought the host.
+ */
+export type HostReferral = {
+  id: string;
+  name: string | null;
+  initials: string | null;
+  /** Homes live on hostmenow, with the seats they open (from seatsForHost). */
+  homes: number;
+  seats: number;
+  /** Days ago the homes went live; null until the host joins. */
+  liveDaysAgo: number | null;
+  /** Shown until the host joins. */
+  status?: string;
+};
+
+export const hostReferrals: HostReferral[] = [
+  { id: 'dana', name: 'Dana Whitfield', initials: 'DW', homes: 3, seats: 9, liveDaysAgo: 41 },
+  { id: 'marcus', name: 'Marcus Lee', initials: 'ML', homes: 1, seats: 3, liveDaysAgo: 12 },
+  { id: 'pending-1', name: null, initials: null, homes: 0, seats: 0, liveDaysAgo: null, status: 'Link sent Sep 21' },
+];
+
+/** Referral codes on host links (hostmenow.com/hosts?ref=...). Mock: the real lookup is the invites API. */
+export const referralCodes: Record<string, string> = { je: 'Jordan Ellis' };
 
 export const houseRules = [
   'Treat every home like a friend lent it to you.',

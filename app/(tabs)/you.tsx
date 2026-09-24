@@ -11,7 +11,7 @@ import { member } from '@/data/mock';
 import { MEMBERSHIP_MONTHLY } from '@/config';
 import { monthDay, monthYear, nextMonthly, plural } from '@/lib/dates';
 import { auth, haptics } from '@/services';
-import { useApp, useBankedNights } from '@/store/app';
+import { useApp, useBankedNights, useInvitesLeft } from '@/store/app';
 import { colors, radius } from '@/theme';
 
 type RowProps = { label: string; value?: string; href?: Href; onPress?: () => void; first?: boolean; chevron?: boolean };
@@ -38,7 +38,8 @@ function Row({ label, value, href, onPress, first, chevron = true }: RowProps) {
 export default function You() {
   const insets = useInsets();
   const nights = useBankedNights();
-  const { invitesLeft, membership, signOut } = useApp();
+  const { membership, signOut } = useApp();
+  const invitesLeft = useInvitesLeft();
 
   const doSignOut = async () => {
     haptics.tapLight();

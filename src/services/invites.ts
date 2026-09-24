@@ -14,6 +14,12 @@ export async function shareInviteLink(): Promise<{ shared: boolean; url: string 
   return { shared: true, url: `https://hostmenow.com/i/${Math.random().toString(36).slice(2, 8)}` };
 }
 
+/** Stands in for the native share sheet with a link to the host page, carrying the member's referral. */
+export async function shareHostLink(ref: string): Promise<{ shared: boolean; url: string }> {
+  await delay(700);
+  return { shared: true, url: `https://hostmenow.com/hosts?ref=${encodeURIComponent(ref)}` };
+}
+
 /** Stands in for the native share sheet for a listing. */
 export async function shareListing(listingId: string): Promise<{ shared: boolean }> {
   await delay(500);

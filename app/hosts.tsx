@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { Linking, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { EstimateFlow } from '@/components/host/EstimateFlow';
+import { referralCodes } from '@/data/mock';
 import { HostsPrelude } from '@/components/host/HostsPrelude';
 import { pageColorsFor, setPageBackground } from '@/lib/webChrome';
 import { colors } from '@/theme';
@@ -13,6 +15,9 @@ export default function Hosts() {
   const reduceMotion = useReducedMotion();
   const [prelude, setPrelude] = useState(!reduceMotion);
   const endPrelude = useCallback(() => setPrelude(false), []);
+  // A member's host link carries ?ref=; the host who joins opens a seat for them.
+  const { ref } = useLocalSearchParams<{ ref?: string }>();
+  const referredBy = ref ? referralCodes[ref.toLowerCase()] : undefined;
   // Keep Safari's bars dark while the intro plays, then match the page.
   useEffect(() => {
     if (prelude) setPageBackground(colors.dark.bg, colors.dark.bg);
@@ -22,7 +27,7 @@ export default function Hosts() {
   return (
     <View style={{ flex: 1 }}>
       {/* Opting in happens inside Hostshare; signed-out hosts sign in there first. */}
-      <EstimateFlow revealed={!prelude} onCta={() => Linking.openURL('https://hostshare.co')} />
+      <EstimateFlow revealed={!prelude} referredBy={referredBy} onCta={() => Linking.openURL('https://hostshare.co')} />
       {prelude ? <HostsPrelude onDone={endPrelude} /> : null}
     </View>
   );

@@ -8,3 +8,5 @@ android/
 .DS_Store
 expo-env.d.ts
 .vercel
+research_notes/
+reports/

@@ -52,6 +52,9 @@ function InviteCard() {
         <T variant="callout" style={{ color: hs.muted, lineHeight: 21 }}>
           Nearly half of every membership goes to hosts. About {money10(e.total)} a year in all from your {prefill.homes} listings.
         </T>
+        {host.referredBy ? (
+          <T variant="caption" style={{ color: hs.muted }}>{host.referredBy}, a member who stayed with you, suggested you.</T>
+        ) : null}
       </View>
       <PressScale
         accessibilityRole="button"

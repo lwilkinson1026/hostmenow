@@ -64,3 +64,25 @@ export const BOOKING_FEE = PRICING_CONFIG.booking_fee_usd;
 
 /** The name in running text. The logo (wordmark, labels, badges) never carries the mark. */
 export const BRAND = 'hostmenow™';
+
+/**
+ * Membership seats (Sep 24, 2026). Members join only through invites, and invites
+ * come from supply: every home that joins opens up to 3 memberships (3 members per
+ * listing), split between the member who brought the host, the host, and the
+ * waitlist. Seats open once the home has been live (not paused) for 30 days, and
+ * scale down for homes that share few free nights. A region whose members can't
+ * find free nights slows, then stops, new invites. See src/lib/seats.ts and
+ * reports/Free night supply at scale.md.
+ */
+export const SEAT_RULES = {
+  membersPerListing: 3,
+  liveDaysToOpen: 30,
+  /** Share of a home's free nights members can realistically use (weekends, season, location). */
+  usableShareOfFreeNights: 0.5,
+  /** Free nights a member uses in a year, for sizing. */
+  freeNightsPerMember: 4,
+  /** Who gets each seat a home opens, in turn. */
+  order: ['referrer', 'host', 'waitlist'] as const,
+  /** Share of free-night searches in a region that end in a free booking. */
+  brake: { slowBelow: 0.85, waitlistBelow: 0.7, waitlistAfterWeeks: 4 },
+};

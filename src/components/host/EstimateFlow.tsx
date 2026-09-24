@@ -219,10 +219,12 @@ type Props = {
   onCta?: () => void;
   /** False while an intro covers the page; the how-it-works steps wait for it. */
   revealed?: boolean;
+  /** The member whose host link brought them here, if any. */
+  referredBy?: string;
 };
 
 /** Three questions, then the pool-led estimate (Revision 02). */
-export function EstimateFlow({ initial, startAtResult, embedded, onInputs, onCta, revealed = true }: Props) {
+export function EstimateFlow({ initial, startAtResult, embedded, onInputs, onCta, revealed = true, referredBy }: Props) {
   const insets = useInsets();
   const [inputs, setInputs] = useState<Inputs>(initial ?? DEFAULTS);
   const [step, setStep] = useState<Step>(startAtResult ? 4 : embedded ? 1 : 0);
@@ -298,6 +300,9 @@ export function EstimateFlow({ initial, startAtResult, embedded, onInputs, onCta
       <HostTextButton label="Adjust" onPress={() => go(1)} />
     ) : (
       <>
+        <T variant="caption" color="inkSecondary" align="center" style={{ fontSize: 12, lineHeight: 17 }}>
+          {referredBy ? `${referredBy} invited you. ` : ''}Each home you add opens a membership you can give to a guest.
+        </T>
         <HostButton label="Opt in on Hostshare" onPress={onCta} />
         <HostTextButton label="Start over" onPress={() => go(1)} />
         <T variant="caption" color="inkSecondary" align="center" style={{ fontSize: 12, lineHeight: 17 }}>

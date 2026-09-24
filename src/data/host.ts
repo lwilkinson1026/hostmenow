@@ -31,7 +31,8 @@ export const host = {
   upcomingGuests: 2,
   payoutAccount: 'Checking ····1234',
   w9OnFile: false,
-  invites: 5,
+  /** The member who brought this host to hostmenow (they get one seat in three this host's homes open). */
+  referredBy: 'Jordan Ellis' as string | null,
 };
 
 export const hostListings: HostListing[] = [

@@ -4,6 +4,7 @@ import { host, hostListings, pastPauses } from '@/data/host';
 import { fromISODate } from '@/lib/dates';
 import type { PauseSpan } from '@/lib/poolAccrual';
 import { estimate, networkFor, round10 } from '@/lib/estimate';
+import { seatsForHost, splitSeats } from '@/lib/seats';
 
 export type OptInMode = 'both' | 'paid';
 /** `on`: opted in to hostmenow. `paused`: opted in, but not taking new member bookings or earning pool income. */
@@ -25,6 +26,8 @@ type State = {
   optedIn: boolean;
   invited: string[];
   linksShared: number;
+  /** Host links shared: hosts can bring hosts too. */
+  hostsInvited: number;
   /** Paused stretches, for the running pool total. */
   pauses: PauseSpan[];
 };
@@ -44,6 +47,7 @@ type Actions = {
   optIn: () => void;
   invite: (guestId: string) => void;
   shareLink: () => void;
+  inviteHost: () => void;
   reset: () => void;
 };
 
@@ -58,6 +62,7 @@ const initial = (): State => ({
   optedIn: false,
   invited: [],
   linksShared: 0,
+  hostsInvited: 0,
   pauses: pastPauses.map((p) => ({ listingId: p.listingId, from: fromISODate(p.from).getTime(), to: fromISODate(p.to).getTime() })),
 });
 
@@ -87,6 +92,7 @@ export const useHost = create<State & Actions>()((set) => ({
   optIn: () => set((s) => ({ optedIn: s.rows.some((r) => r.on), w9OnFile: true, w9: { legal: '', tin: '', address: '' } })),
   invite: (id) => set((s) => (s.invited.includes(id) ? s : { invited: [...s.invited, id] })),
   shareLink: () => set((s) => ({ linksShared: s.linksShared + 1 })),
+  inviteHost: () => set((s) => ({ hostsInvited: s.hostsInvited + 1 })),
   reset: () => set(initial()),
 }));
 
@@ -114,7 +120,16 @@ export function hostPrefill() {
   };
 }
 
-export const invitesLeft = (s: Pick<State, 'invited' | 'linksShared'>) => Math.max(0, host.invites - s.invited.length - s.linksShared);
+/** Seats this host's opted-in homes open (src/lib/seats.ts), and the host's own share of them. */
+export function hostSeats(rows: Row[]) {
+  const seats = seatsForHost(
+    rows.map((r) => ({ on: r.on, mode: r.mode, freeCap: r.freeCap, openPerMonth: hostListings.find((l) => l.id === r.id)?.openNights ?? 0 })),
+  );
+  return { seats, mine: splitSeats(seats, host.referredBy !== null).host };
+}
+
+export const invitesLeft = (s: Pick<State, 'rows' | 'invited' | 'linksShared'>) =>
+  Math.max(0, hostSeats(s.rows).mine - s.invited.length - s.linksShared);
 
 // Dev only: lets the web preview jump straight into a state while testing.
 if (__DEV__ && typeof window !== 'undefined') {

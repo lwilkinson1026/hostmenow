@@ -1,12 +1,13 @@
 import { useCallback } from 'react';
 import { create } from 'zustand';
 
-import { CHECK_IN_HOUR, FREE_NIGHT_REFUND_CUTOFF_HOURS, FREE_NIGHTS_UNLOCK_AFTER_DAYS } from '@/config';
+import { CHECK_IN_HOUR, FREE_NIGHT_REFUND_CUTOFF_HOURS, FREE_NIGHTS_UNLOCK_AFTER_DAYS, SEAT_RULES } from '@/config';
 
-import { getListing, isOpenOn, member, sentInvites, type Listing, type NightGrant, type SentInvite } from '@/data/mock';
+import { getListing, hostReferrals, isOpenOn, member, sentInvites, type HostReferral, type Listing, type NightGrant, type SentInvite } from '@/data/mock';
 import { addDays, fromISODate, monthDay, toISODate, today } from '@/lib/dates';
 import type { Range } from '@/lib/range';
 import { priceStay, type StayPrice } from '@/lib/pricing';
+import { splitSeats } from '@/lib/seats';
 import type { IdStatus } from '@/services/identity';
 import type { PayMethod } from '@/services/payments';
 import { send as sendReservation } from '@/services/reservations';
@@ -36,8 +37,10 @@ type State = {
   exploreEmpty: boolean;
   tripsEmpty: boolean;
   bookings: Booking[];
-  invitesLeft: number;
   sentInvites: SentInvite[];
+  hostReferrals: HostReferral[];
+  /** Dev menu: days added to the clock for host referrals, to preview seats opening. */
+  referralDaysAhead: number;
   /** Selected nights on Explore, as offsets from today. Null shows every home open in the window. */
   range: Range | null;
   /** Days after a grant before its free nights can be used. See config. */
@@ -51,6 +54,7 @@ type Actions = {
   book: (b: Omit<Booking, 'id' | 'doorCode' | 'bankBefore' | 'status' | 'nightKinds'>) => Booking;
   cancelBooking: (id: string) => void;
   sendInvite: () => void;
+  sendHostInvite: () => void;
   setIdStatus: (s: IdStatus) => void;
   setMembership: (s: 'active' | 'paused') => void;
   // dev menu
@@ -58,6 +62,7 @@ type Actions = {
   setExploreEmpty: (v: boolean) => void;
   setTripsEmpty: (v: boolean) => void;
   setUnlockDays: (d: number) => void;
+  setReferralDaysAhead: (d: number) => void;
 };
 
 /** Every unused free night in the bank, locked or not. */
@@ -136,8 +141,9 @@ const initial = (): State => ({
   exploreEmpty: false,
   tripsEmpty: false,
   bookings: seedBookings(),
-  invitesLeft: member.invitesLeft,
   sentInvites: [...sentInvites],
+  hostReferrals: hostReferrals.map((r) => ({ ...r })),
+  referralDaysAhead: 0,
   range: null,
   unlockDays: FREE_NIGHTS_UNLOCK_AFTER_DAYS,
 });
@@ -188,8 +194,15 @@ export const useApp = create<State & Actions>()((set, get) => ({
 
   sendInvite: () =>
     set((s) => ({
-      invitesLeft: Math.max(0, s.invitesLeft - 1),
       sentInvites: [...s.sentInvites, { name: null, initials: null, status: `Link sent ${monthDay(today())} · expires in 5 days` }],
+    })),
+
+  sendHostInvite: () =>
+    set((s) => ({
+      hostReferrals: [
+        ...s.hostReferrals,
+        { id: `ref-${Date.now().toString(36)}`, name: null, initials: null, homes: 0, seats: 0, liveDaysAgo: null, status: `Link sent ${monthDay(today())}` },
+      ],
     })),
 
   setIdStatus: (idStatus) => set({ idStatus }),
@@ -200,7 +213,27 @@ export const useApp = create<State & Actions>()((set, get) => ({
   setExploreEmpty: (exploreEmpty) => set({ exploreEmpty }),
   setTripsEmpty: (tripsEmpty) => set({ tripsEmpty }),
   setUnlockDays: (unlockDays) => set({ unlockDays }),
+  setReferralDaysAhead: (referralDaysAhead) => set({ referralDaysAhead }),
 }));
+
+/** One host referral as the member sees it: the invites it opens for them, and when. */
+export function referralSeats(r: HostReferral, daysAhead = 0) {
+  const mine = splitSeats(r.seats).referrer;
+  const live = r.liveDaysAgo === null ? null : r.liveDaysAgo + daysAhead;
+  const daysLeft = live === null ? null : Math.max(0, SEAT_RULES.liveDaysToOpen - live);
+  return { mine, open: daysLeft === 0, daysLeft };
+}
+
+/** Invites come only from hosts the member brought: seats opened for them, less invites sent. */
+export function invitesLeftOf(s: Pick<State, 'hostReferrals' | 'sentInvites' | 'referralDaysAhead'>) {
+  const earned = s.hostReferrals.reduce((sum, r) => {
+    const seat = referralSeats(r, s.referralDaysAhead);
+    return sum + (seat.open ? seat.mine : 0);
+  }, 0);
+  return Math.max(0, earned - s.sentInvites.length);
+}
+
+export const useInvitesLeft = () => useApp(invitesLeftOf);
 
 /** Free nights the member can use now. Drives prices and booking. */
 export const useFreeNights = () => useApp(usableNightsOf);

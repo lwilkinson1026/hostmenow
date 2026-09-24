@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { forwardRef } from 'react';
 import { StyleSheet, Switch, View } from 'react-native';
 
-import { FREE_NIGHTS_UNLOCK_PREVIEW_DAYS } from '@/config';
+import { FREE_NIGHTS_UNLOCK_PREVIEW_DAYS, SEAT_RULES } from '@/config';
 import { freeNightsOf, useApp } from '@/store/app';
 import { colors } from '@/theme';
 import { Segmented } from './Segmented';
@@ -64,6 +64,15 @@ export const DevMenu = forwardRef<SheetRef, { onClose: () => void }>(function De
               router.push('/id-failed');
             }
           }}
+        />
+      </Row>
+      <Row label={`Hosts live ${SEAT_RULES.liveDaysToOpen} more days`}>
+        <Switch
+          trackColor={track}
+          thumbColor="#FFFFFF"
+          {...({ activeThumbColor: '#FFFFFF' } as object)}
+          value={s.referralDaysAhead > 0}
+          onValueChange={(v) => s.setReferralDaysAhead(v ? SEAT_RULES.liveDaysToOpen : 0)}
         />
       </Row>
       <Row label="Empty Explore">

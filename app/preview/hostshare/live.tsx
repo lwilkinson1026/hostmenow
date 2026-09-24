@@ -6,27 +6,28 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { HostIcon } from '@/components/host/HostIcon';
 import { HostButton, HostTextButton, hs } from '@/components/host/HostUI';
 import { T } from '@/components/Text';
-import { pastGuests } from '@/data/host';
+import { host, pastGuests } from '@/data/host';
 import { useInsets } from '@/lib/insets';
 import { haptics, invites } from '@/services';
-import { invitesLeft, useHost } from '@/store/host';
-import { BRAND } from '@/config';
+import { hostSeats, invitesLeft, useHost } from '@/store/host';
+import { BRAND, SEAT_RULES } from '@/config';
 
-/** 7. Live, with 5 host invites and suggested past guests. */
+/** 7. Live, with the host's invites (one per home, once live 30 days), suggested past guests, and a link to bring another host. */
 export default function Live() {
   const insets = useInsets();
   const s = useHost();
   const [sharing, setSharing] = useState(false);
   const count = s.rows.filter((r) => r.on).length;
   const left = invitesLeft(s);
+  const { mine } = hostSeats(s.rows);
 
-  const share = async () => {
+  const shareHost = async () => {
     setSharing(true);
-    const r = await invites.shareInviteLink();
+    const r = await invites.shareHostLink(host.id);
     setSharing(false);
     if (r.shared) {
       haptics.success();
-      s.shareLink();
+      s.inviteHost();
     }
   };
 
@@ -47,8 +48,10 @@ export default function Live() {
           </T>
         </View>
         <View style={styles.invites}>
-          <T variant="heading">You have {left} {left === 1 ? 'invite' : 'invites'}.</T>
-          <T variant="callout" color="inkSecondary">Send them to guests you'd happily host again.</T>
+          <T variant="heading">You'll have {mine} {mine === 1 ? 'invite' : 'invites'}.</T>
+          <T variant="callout" color="inkSecondary">
+            One for each home, once it's been live {SEAT_RULES.liveDaysToOpen} days. Pick guests you'd happily host again and we'll send them then.
+          </T>
         </View>
         <View style={{ marginTop: 8 }}>
           {pastGuests.map((g) => {
@@ -80,7 +83,12 @@ export default function Live() {
         </View>
       </ScrollView>
       <View style={{ paddingHorizontal: 24, paddingBottom: Math.max(insets.bottom, 16) + 16, gap: 8 }}>
-        <HostButton label="Share an invite link" disabled={left === 0} loading={sharing} onPress={share} />
+        <HostButton label="Invite another host" loading={sharing} onPress={shareHost} />
+        {s.hostsInvited > 0 ? (
+          <T variant="caption" color="inkSecondary" align="center">
+            Link sent. Each home they bring opens a membership for you.
+          </T>
+        ) : null}
         <HostTextButton label="Done" onPress={() => router.dismissTo('/preview/hostshare')} />
       </View>
     </View>
