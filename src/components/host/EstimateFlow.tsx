@@ -258,8 +258,10 @@ export function EstimateFlow({ initial, startAtResult, embedded, onInputs, onCta
     );
   }
 
+  // Full-width page on desktop web; the estimate itself stays a phone-width column.
   return (
     <View style={{ flex: 1, backgroundColor: hs.card, paddingTop: insets.top - 8 }}>
+      <View style={{ flex: 1, width: '100%', maxWidth: 480, alignSelf: 'center' }}>
       <StatusBar style="dark" />
       <View style={{ paddingHorizontal: 24 }}>
         <View style={{ height: 44, marginTop: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -274,6 +276,7 @@ export function EstimateFlow({ initial, startAtResult, embedded, onInputs, onCta
         {body}
       </ScrollView>
       <View style={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: Math.max(insets.bottom, 16) + 12, gap: 8 }}>{actions}</View>
+      </View>
     </View>
   );
 }

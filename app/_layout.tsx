@@ -11,7 +11,7 @@ import { colors, motion } from '@/theme';
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 /** On web, everything but the public pages renders as the mobile layout, centered. */
-const FULL_WIDTH = ['/', '/learn'];
+const FULL_WIDTH = ['/', '/learn', '/hosts'];
 function WebFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   if (Platform.OS !== 'web' || FULL_WIDTH.includes(pathname)) return <>{children}</>;
