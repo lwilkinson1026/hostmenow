@@ -33,7 +33,7 @@ Also wired: the three tabs, the List / Map toggle, search, date chips, the night
 
 **Revision 01 (free member stays count toward Hostshare share nights):** the prototype carries the host copy, the "Share nights covered by hostmenow" row, and a reference share-credit ledger in `src/lib/shareLedger.ts` (earn-rate weighted, pending at booking, final on completion or no-show, reversed on member cancel, none on host cancel, idempotent per booking night). Bookings record which nights were free or paid and send that in the reservation payload (`src/services/reservations.ts`). The real ledger, webhooks and backfill belong in the Hostshare backend, which isn't in this repo.
 
-Estimates use the pool model from the handoff calculator (`src/lib/pool.ts`) with each listing's rate and open nights. Opt-in is mocked in `src/services/hostshare.ts`; the real version writes `hostmenow_optins` records against the host's Hostshare session.
+Opt-in is mocked in `src/services/hostshare.ts`; the real version writes `hostmenow_optins` records against the host's Hostshare session.
 
 ## Layout
 
