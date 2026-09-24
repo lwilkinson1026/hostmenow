@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { Pressable, StyleSheet, View, useWindowDimensions, type TextStyle } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, View, type TextStyle } from 'react-native';
 
 import { HouseBackdrop, ramp, TypedLine, usePreludeClock } from '@/components/Typewriter';
 import { colors, type } from '@/theme';
@@ -39,7 +40,8 @@ const typed = (now: number, text: string, at: number, perChar = CH) =>
 
 /** "What if your unbooked nights paid you…" before the host estimate. Tap to skip. */
 export function HostsPrelude({ onDone }: { onDone: () => void }) {
-  const { width } = useWindowDimensions();
+  // Size to the space the intro actually has (on desktop web /hosts sits in a phone-width column).
+  const [width, setWidth] = useState(0);
   const wide = width >= 700;
   const { now, skipTo } = usePreludeClock(TL.end, onDone);
   const skip = () => skipTo(TL.reveal[1] - 350);
@@ -47,7 +49,8 @@ export function HostsPrelude({ onDone }: { onDone: () => void }) {
   const blink = Math.floor(now / 450) % 2 === 0;
   const size = wide ? 34 : 26;
   const lineStyle: TextStyle = { ...(type.body as TextStyle), color: colors.dark.ink, fontSize: size, lineHeight: Math.round(size * 1.3) };
-  const bigSize = wide ? 56 : 40;
+  // "Now they can." must fit on one line, so it stays truly centered.
+  const bigSize = width > 0 ? Math.max(28, Math.min(56, Math.floor((width - 56) / 9.4))) : 40;
   const bigStyle: TextStyle = {
     ...(type.display as TextStyle),
     color: colors.dark.ink,
@@ -68,6 +71,7 @@ export function HostsPrelude({ onDone }: { onDone: () => void }) {
 
   return (
     <View
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
       style={[StyleSheet.absoluteFill, { backgroundColor: colors.dark.bg, opacity: fadeOut, zIndex: 10 }]}
       accessible
       accessibilityLabel={`${L1} ${L2} ${l3} ${L4}`}
@@ -95,7 +99,7 @@ export function HostsPrelude({ onDone }: { onDone: () => void }) {
         </View>
       ) : (
         <View style={[styles.column, { alignItems: 'center', maxWidth: wide ? 720 : 520 }]}>
-          <TypedLine text={L4} shown={typed(now, L4, TL.l4.at, 60)} caret={now >= TL.l4.at && (now < TL.l4.end || blink)} style={bigStyle} />
+          <TypedLine text={L4} shown={typed(now, L4, TL.l4.at, 60)} caret={now >= TL.l4.at && (now < TL.l4.end || blink)} style={{ ...bigStyle, flexShrink: 0 }} />
         </View>
       )}
 
