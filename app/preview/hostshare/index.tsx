@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { HostIcon, type HostIconName } from '@/components/host/HostIcon';
@@ -7,9 +8,10 @@ import { hs, money0 } from '@/components/host/HostUI';
 import { PressScale } from '@/components/PressScale';
 import { T } from '@/components/Text';
 import { host, hostListings, memberStayEvents, notices, quarter } from '@/data/host';
-import { monthDay, plural } from '@/lib/dates';
+import { fromISODate, monthDay, plural } from '@/lib/dates';
 import { useInsets } from '@/lib/insets';
 import { estimate, money10, networkFor, nextPoolPayout } from '@/lib/estimate';
+import { accruedPool, poolPerDay, quarterStart } from '@/lib/poolAccrual';
 import { covered, fmtNights, replay } from '@/lib/shareLedger';
 import { haptics } from '@/services';
 import { hostPrefill, invitesLeft, useHost } from '@/store/host';
@@ -66,15 +68,61 @@ function InviteCard() {
 
 /** Share-night credits from member stays, from the reservation events Hostshare receives. */
 const ledger = replay(memberStayEvents);
-/** Completed member stays with at least one free night. */
-const freeStays = new Set(Object.values(ledger).filter((c) => c.status === 'final').map((c) => c.bookingId)).size;
 
-/** After opt-in: this quarter's earnings. */
+/** Re-render every `ms` so the running total keeps up with the clock. */
+function useNow(ms: number) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), ms);
+    return () => clearInterval(t);
+  }, [ms]);
+  return now;
+}
+
+const money2 = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+/** Counts up to `value` when the card opens, then follows it. */
+function CountUp({ value }: { value: number }) {
+  const [shown, setShown] = useState(0);
+  const from = useRef(0);
+  useEffect(() => {
+    let raf = 0;
+    const start = performance.now();
+    const a = from.current;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / 1400);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const v = a + (value - a) * eased;
+      setShown(v);
+      from.current = v;
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  return (
+    <T variant="bodyStrong" style={{ fontSize: 40, lineHeight: 44, letterSpacing: -1.2, fontVariant: ['tabular-nums'] }}>
+      {money2(shown)}
+    </T>
+  );
+}
+
+/** After opt-in: the running pool share leads, then the rest of the quarter. */
 function EarningsCard() {
   const s = useHost();
-  const live = s.rows.filter((r) => r.on).length;
-  const total = quarter.paidStays.amount + quarter.pool.amount;
-  const paidPct = (quarter.paidStays.amount / total) * 100;
+  const now = useNow(30_000);
+  const opted = s.rows.filter((r) => r.on);
+  const paused = opted.filter((r) => r.paused);
+  const open = opted.filter((r) => !r.paused);
+  const listing = (id: string) => hostListings.find((l) => l.id === id)!;
+  const toAccrual = (r: (typeof opted)[number]) => {
+    const l = listing(r.id);
+    return { id: r.id, rate: l.rate, openNights: l.openNights, mode: r.mode, liveFrom: fromISODate(host.optedInAt).getTime() };
+  };
+  const pool = accruedPool(opted.map(toAccrual), s.pauses, quarterStart(new Date(now)).getTime(), now);
+  const perDay = (rows: typeof opted) => rows.reduce((sum, r) => sum + poolPerDay(toAccrual(r)), 0);
+  const total = quarter.paidStays.amount + pool;
+
   return (
     <View style={styles.light}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -83,38 +131,38 @@ function EarningsCard() {
           <T variant="captionStrong">Manage</T>
         </Pressable>
       </View>
-      <T variant="caption" color="inkSecondary" style={{ marginTop: 8 }}>This quarter</T>
-      <T variant="bodyStrong" style={{ fontSize: 40, lineHeight: 44, letterSpacing: -1.2, fontVariant: ['tabular-nums'] }}>{money0(total)}</T>
-      <View style={styles.bar}>
-        <View style={{ width: `${paidPct}%`, backgroundColor: hs.ink }} />
-        <View style={{ flex: 1, backgroundColor: hs.accent }} />
-      </View>
-      <View style={styles.row}>
-        <View style={styles.legend}>
-          <View style={[styles.dot, { backgroundColor: hs.ink }]} />
-          <T variant="callout">Paid stays · {quarter.paidStays.nights} nights</T>
-        </View>
-        <T variant="calloutStrong" style={{ fontVariant: ['tabular-nums'] }}>{money0(quarter.paidStays.amount)}</T>
-      </View>
-      <View style={styles.row}>
-        <View style={styles.legend}>
-          <View style={[styles.dot, { backgroundColor: hs.accent }]} />
-          <T variant="callout">Pool estimate · {plural(freeStays, 'free stay')}</T>
-        </View>
-        <T variant="calloutStrong" style={{ fontVariant: ['tabular-nums'] }}>{money0(quarter.pool.amount)}</T>
-      </View>
-      {host.tier === 'Pro' || host.tier === 'Pro+' ? (
+      <T variant="caption" color="inkSecondary" style={{ marginTop: 8 }}>Your pool share this quarter</T>
+      <CountUp value={pool} />
+      <T variant="caption" color="inkSecondary">Estimated. Paid {monthDay(nextPoolPayout())}.</T>
+      <T variant="captionStrong" style={{ color: hs.accentText, marginTop: 10 }}>
+        {open.length === 0
+          ? `All listings paused. Reopening adds ${money2(perDay(paused))} a day.`
+          : paused.length > 0
+            ? `+${money2(perDay(open))} a day. Reopening ${paused.length === 1 ? 'your paused listing' : `${paused.length} paused listings`} adds ${money2(perDay(paused))} more.`
+            : `+${money2(perDay(open))} a day while your listings are open`}
+      </T>
+
+      <View style={{ marginTop: 12, borderTopWidth: 1, borderTopColor: hs.line }}>
         <View style={styles.row}>
-          <T variant="callout" style={{ flexShrink: 1 }}>Share nights covered by {BRAND}</T>
-          <T variant="calloutStrong" style={{ fontVariant: ['tabular-nums'] }}>
-            {fmtNights(covered(ledger, host.id, host.membershipYearStart))} of {host.pledge}
-          </T>
+          <T variant="callout">Paid stays · {quarter.paidStays.nights} nights</T>
+          <T variant="calloutStrong" style={{ fontVariant: ['tabular-nums'] }}>{money0(quarter.paidStays.amount)}</T>
         </View>
-      ) : null}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, gap: 8 }}>
-        <T variant="caption" color="inkSecondary">Pool paid {monthDay(nextPoolPayout())}</T>
+        {host.tier === 'Pro' || host.tier === 'Pro+' ? (
+          <View style={styles.row}>
+            <T variant="callout" style={{ flexShrink: 1 }}>Share nights covered by {BRAND}</T>
+            <T variant="calloutStrong" style={{ fontVariant: ['tabular-nums'] }}>
+              {fmtNights(covered(ledger, host.id, host.membershipYearStart))} of {host.pledge}
+            </T>
+          </View>
+        ) : null}
+        <View style={[styles.row, { borderBottomWidth: 0 }]}>
+          <T variant="calloutStrong">This quarter so far</T>
+          <T variant="calloutStrong" style={{ fontVariant: ['tabular-nums'] }}>{money0(total)}</T>
+        </View>
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingBottom: 12 }}>
         <T variant="caption" color="inkSecondary">
-          {plural(live, 'listing')} live · {plural(invitesLeft(s), 'invite')} left
+          {plural(open.length, 'listing')} live{paused.length ? ` · ${paused.length} paused` : ''} · {plural(invitesLeft(s), 'invite')} left
         </T>
       </View>
     </View>

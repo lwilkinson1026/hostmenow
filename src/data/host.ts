@@ -23,6 +23,8 @@ export const host = {
   /** Share nights pledged this membership year (earn-rate weighted, like earned-back progress). */
   pledge: 12,
   membershipYearStart: '2026-09-01',
+  /** When this host's listings joined hostmenow (the demo host has been live since the quarter began). */
+  optedInAt: '2026-07-01',
   initial: 'L',
   travelNights: 21,
   upcomingGuests: 2,
@@ -49,7 +51,6 @@ export const pastGuests = [
 /** Mock quarter activity shown on the earnings card after opt-in. */
 export const quarter = {
   paidStays: { nights: 5, amount: 484 },
-  pool: { amount: 160 },
 };
 
 /** Recent hostmenow activity on the host's listings, newest first. */
@@ -65,7 +66,7 @@ export const hostTerms = [
   "Pool shares are paid quarterly. Estimates aren't guaranteed.",
   "You can't decline a member based on their photo or video.",
   'Cancelling a confirmed stay lowers your pool share.',
-  'Leave any time. Stays already booked still happen.',
+  'Pause a listing or leave any time. Stays already booked still happen.',
 ];
 
 export const memberVetting = [
@@ -93,3 +94,6 @@ export const memberStayEvents: ReservationEvent[] = [
   { type: 'completed', bookingId: 'hm-103' },
   res('hm-104', 'orchard', 1.4, [['2026-09-25', 'free'], ['2026-09-26', 'free']]),
 ];
+
+/** Past pauses on this host's listings, for the running pool total. */
+export const pastPauses = [{ listingId: 'loft', from: '2026-08-10', to: '2026-08-24' }];

@@ -1,10 +1,13 @@
 import { create } from 'zustand';
 
-import { host, hostListings } from '@/data/host';
+import { host, hostListings, pastPauses } from '@/data/host';
+import { fromISODate } from '@/lib/dates';
+import type { PauseSpan } from '@/lib/poolAccrual';
 import { estimate, networkFor, round10 } from '@/lib/estimate';
 
 export type OptInMode = 'both' | 'paid';
-export type Row = { id: string; on: boolean; mode: OptInMode };
+/** `on`: opted in to hostmenow. `paused`: opted in, but not taking new member bookings or earning pool income. */
+export type Row = { id: string; on: boolean; mode: OptInMode; paused: boolean };
 
 type State = {
   rows: Row[];
@@ -16,10 +19,14 @@ type State = {
   optedIn: boolean;
   invited: string[];
   linksShared: number;
+  /** Paused stretches, for the running pool total. */
+  pauses: PauseSpan[];
 };
 
 type Actions = {
   toggle: (id: string) => void;
+  /** Pause or reopen a listing. Instant; stays already booked still happen. */
+  setPaused: (id: string, paused: boolean) => void;
   /** Save edited listings after opt-in. Turning every listing off opts the host out. */
   saveRows: (rows: Row[]) => void;
   setMode: (id: string, mode: OptInMode) => void;
@@ -35,7 +42,7 @@ type Actions = {
 
 const initial = (): State => ({
   // Every live listing is on by default, set to paid and free stays.
-  rows: hostListings.filter((l) => l.eligible).map((l) => ({ id: l.id, on: true, mode: 'both' })),
+  rows: hostListings.filter((l) => l.eligible).map((l) => ({ id: l.id, on: true, mode: 'both', paused: false })),
   booking: 'instant',
   damageHold: false,
   w9: { legal: '', tin: '', address: '' },
@@ -44,13 +51,27 @@ const initial = (): State => ({
   optedIn: false,
   invited: [],
   linksShared: 0,
+  pauses: pastPauses.map((p) => ({ listingId: p.listingId, from: fromISODate(p.from).getTime(), to: fromISODate(p.to).getTime() })),
 });
 
 export const useHost = create<State & Actions>()((set) => ({
   ...initial(),
   toggle: (id) => set((s) => ({ rows: s.rows.map((r) => (r.id === id ? { ...r, on: !r.on } : r)) })),
+  setPaused: (id, paused) =>
+    set((s) => {
+      const now = Date.now();
+      const pauses = paused
+        ? [...s.pauses, { listingId: id, from: now }]
+        : s.pauses.map((p) => (p.listingId === id && p.to === undefined ? { ...p, to: now } : p));
+      return { rows: s.rows.map((r) => (r.id === id ? { ...r, paused } : r)), pauses };
+    }),
   setMode: (id, mode) => set((s) => ({ rows: s.rows.map((r) => (r.id === id ? { ...r, mode } : r)) })),
-  saveRows: (rows) => set({ rows, optedIn: rows.some((r) => r.on) }),
+  // Pausing applies instantly, so keep the store's pause state over the draft's.
+  saveRows: (rows) =>
+    set((s) => {
+      const next = rows.map((r) => ({ ...r, paused: s.rows.find((x) => x.id === r.id)?.paused ?? false }));
+      return { rows: next, optedIn: next.some((r) => r.on) };
+    }),
   setBooking: (booking) => set({ booking }),
   setDamageHold: (damageHold) => set({ damageHold }),
   setW9: (patch) => set((s) => ({ w9: { ...s.w9, ...patch } })),

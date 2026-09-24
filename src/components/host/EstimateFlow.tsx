@@ -224,6 +224,7 @@ export function EstimateFlow({ initial, startAtResult, embedded, onInputs, onCta
         help="Per home. These are the nights you'd usually lose."
       >
         <Chips options={OPEN} value={inputs.openPerMonth} onChange={(openPerMonth) => set({ openPerMonth })} columns={2} />
+        <T variant="caption" color="inkSecondary" style={{ marginTop: 14 }}>No commitment. Pause a listing any time.</T>
       </Question>
     ) : (
       <EstimateResult inputs={inputs} stage={stage} onStage={setStage} />
