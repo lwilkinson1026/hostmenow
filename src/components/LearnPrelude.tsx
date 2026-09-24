@@ -1,9 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions, type TextStyle } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions, type TextStyle } from 'react-native';
 
 import { colors, type } from '@/theme';
-import { DriftBackground } from './DriftBackground';
+import { HouseBackdrop, ramp, TypedLine, usePreludeClock } from './Typewriter';
 
 /** ms per typed character, and the pause after a line finishes. */
 const CH = 32;
@@ -60,63 +59,15 @@ function buildTimeline() {
 
 const TL = buildTimeline();
 
-const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
-const ramp = (now: number, a: number, b: number) => clamp01((now - a) / (b - a));
 const count = (now: number, line: Line) => (now < line.at ? 0 : Math.min(line.text.length, Math.floor((now - line.at) / CH) + 1));
-
-const CARET = '\u258F';
-
-/**
- * Types `text` in place: the untyped rest is laid out but transparent, so lines
- * wrap where they'll finish and nothing shifts while typing. The caret always
- * holds its space; centered lines get a matching invisible one in front so they
- * stay truly centered.
- */
-function TypedLine({ text, shown, caret, style, dim }: { text: string; shown: number; caret: boolean; style: TextStyle; dim?: number }) {
-  const centered = style.textAlign === 'center';
-  return (
-    <Text style={[style, dim !== undefined ? { opacity: dim } : null]}>
-      {centered ? <Text style={{ color: 'transparent' }}>{CARET}</Text> : null}
-      {text.slice(0, shown)}
-      <Text style={{ color: caret ? colors.dark.ink : 'transparent' }}>{CARET}</Text>
-      <Text style={{ color: 'transparent' }}>{text.slice(shown)}</Text>
-    </Text>
-  );
-}
 
 /** Typed prologue on Learn More. Tap to skip. Calls onDone once it has faded away. */
 export function LearnPrelude({ onDone }: { onDone: () => void }) {
   const { width } = useWindowDimensions();
   const wide = width >= 700;
-  const [now, setNow] = useState(0);
-  const start = useRef<number | null>(null);
-  const offset = useRef(0);
-  const doneRef = useRef(false);
-
-  useEffect(() => {
-    let raf = 0;
-    const tick = (ts: number) => {
-      if (start.current === null) start.current = ts;
-      const t = ts - start.current + offset.current;
-      setNow(t);
-      if (t >= TL.end) {
-        if (!doneRef.current) {
-          doneRef.current = true;
-          onDone();
-        }
-        return;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [onDone]);
-
-  const skip = () => {
-    // Jump to the reveal and let the fade play quickly.
-    const target = TL.reveal[1] - 350;
-    if (now < target) offset.current += target - now;
-  };
+  const { now, skipTo } = usePreludeClock(TL.end, onDone);
+  // Jump to the reveal and let the fade play quickly.
+  const skip = () => skipTo(TL.reveal[1] - 350);
 
   const blink = Math.floor(now / 450) % 2 === 0;
   const storySize = wide ? 30 : 22;
@@ -140,13 +91,7 @@ export function LearnPrelude({ onDone }: { onDone: () => void }) {
     <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.dark.bg, opacity: fadeOut, zIndex: 10 }]} accessible accessibilityLabel={script}>
       <StatusBar style="light" />
       {/* The landing's house, lights off, then on for the last line. */}
-      <View style={[StyleSheet.absoluteFill, { opacity: 0.9 * ramp(now, 0, 900) }]}>
-        <DriftBackground source={require('../../assets/photos/landing.jpg')} cropX={51} overlay={0} />
-        <View style={[StyleSheet.absoluteFill, { opacity: 1 - ramp(now, ...TL.lightsOn) }]}>
-          <DriftBackground source={require('../../assets/photos/landing-dark.jpg')} cropX={51} overlay={0} />
-        </View>
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: '#000', opacity: 0.82 - 0.22 * ramp(now, ...TL.lightsOn) }]} />
-      </View>
+      <HouseBackdrop now={now} lightsOn={TL.lightsOn} />
 
       {!sceneTwo ? (
         <View style={[styles.column, { opacity: storyOpacity, maxWidth: wide ? 640 : 520 }]}>

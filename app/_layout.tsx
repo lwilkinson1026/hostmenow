@@ -28,8 +28,8 @@ const navTheme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background
 function WebPageChrome() {
   const pathname = usePathname();
   useEffect(() => {
-    // Learn More sets its own colors (dark during its prologue).
-    if (pathname !== '/learn') setPageBackground(...pageColorsFor(pathname));
+    // Learn More and /hosts set their own colors (dark during their intros).
+    if (pathname !== '/learn' && pathname !== '/hosts') setPageBackground(...pageColorsFor(pathname));
     if (pathname !== '/') setBackdrop(null);
   }, [pathname]);
   return null;
