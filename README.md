@@ -25,9 +25,11 @@ Also wired: the three tabs, the List / Map toggle, search, date chips, the night
 
 **Dev menu:** long-press the `hostmenow` wordmark on Explore to switch mock states: nights bank 5 or 0, membership paused, ID verifying or failed, empty Explore, empty Trips.
 
-## Host opt-in (Hostshare hosts)
+## Hosts
 
-"Earn as a Host" at the bottom of the landing opens the host flow as it would appear inside the Hostshare app: dashboard card → value → choose listings → who you'll host → payouts and W-9 → terms → live with 5 host invites → the dashboard card becomes quarterly earnings ("Manage" edits listings).
+**Public estimate, `/hosts` (Revision 02).** "Earn as a Host" on the landing (and the host link on Learn More) opens three questions (homes, nightly rate, nights still empty 5 days out) and a pool-led estimate with an "At launch" / "At 8,000 members" toggle. "Opt in on Hostshare" opens hostshare.co. All host figures come from one function, `estimate()` in `src/lib/estimate.ts`, ported from the reference build; `pnpm test` checks it against the revision's fixtures.
+
+**Partner demo, `/preview/hostshare` (unlisted).** The Hostshare opt-in flow as it would appear inside Hostshare: dashboard card (prefilled pool estimate) → value (same prefilled result, "Adjust" opens the questions) → choose listings → who you'll host → payouts and W-9 → terms → live with 5 host invites → quarterly earnings card. Nothing on the site links to it; share the URL directly.
 
 **Revision 01 (free member stays count toward Hostshare share nights):** the prototype carries the host copy, the "Share nights covered by hostmenow" row, and a reference share-credit ledger in `src/lib/shareLedger.ts` (earn-rate weighted, pending at booking, final on completion or no-show, reversed on member cancel, none on host cancel, idempotent per booking night). Bookings record which nights were free or paid and send that in the reservation payload (`src/services/reservations.ts`). The real ledger, webhooks and backfill belong in the Hostshare backend, which isn't in this repo.
 

@@ -60,7 +60,7 @@ export default function HostTermsFull() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Close"
-          onPress={() => (router.canGoBack() ? router.back() : router.replace('/host/terms'))}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/preview/hostshare/terms'))}
           style={styles.close}
         >
           <HostIcon name="close" size={18} />

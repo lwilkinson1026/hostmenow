@@ -100,7 +100,7 @@ export function pageColorsFor(pathname: string): [background: string, themeColor
   if (pathname.startsWith('/onboarding') || pathname === '/id-failed') return [dark, dark];
   // Photo header on top, white page below.
   if (pathname === '/learn') return [colors.light.bg, LEARN_TOP];
-  if (pathname === '/host') return ['#FAFAF9', '#FAFAF9'];
+  if (pathname === '/preview/hostshare') return ['#FAFAF9', '#FAFAF9'];
   return [colors.light.bg, colors.light.bg];
 }
 

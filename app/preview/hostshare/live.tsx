@@ -81,7 +81,7 @@ export default function Live() {
       </ScrollView>
       <View style={{ paddingHorizontal: 24, paddingBottom: Math.max(insets.bottom, 16) + 16, gap: 8 }}>
         <HostButton label="Share an invite link" disabled={left === 0} loading={sharing} onPress={share} />
-        <HostTextButton label="Done" onPress={() => router.dismissTo('/host')} />
+        <HostTextButton label="Done" onPress={() => router.dismissTo('/preview/hostshare')} />
       </View>
     </View>
   );

@@ -16,6 +16,7 @@
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
     "@gorhom/bottom-sheet": "^5.2.14",
+    "@react-native-community/slider": "5.2.0",
     "expo": "~57.0.24",
     "expo-asset": "~57.0.18",
     "expo-camera": "~57.0.5",

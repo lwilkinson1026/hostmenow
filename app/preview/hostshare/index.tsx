@@ -9,10 +9,10 @@ import { T } from '@/components/Text';
 import { host, hostListings, memberStayEvents, notices, quarter } from '@/data/host';
 import { monthDay, plural } from '@/lib/dates';
 import { useInsets } from '@/lib/insets';
-import { nextPoolPayout, roundTo } from '@/lib/pool';
+import { estimate, money10, networkFor, nextPoolPayout } from '@/lib/estimate';
 import { covered, fmtNights, replay } from '@/lib/shareLedger';
 import { haptics } from '@/services';
-import { invitesLeft, listingEstimate, useHost } from '@/store/host';
+import { hostPrefill, invitesLeft, useHost } from '@/store/host';
 import { BRAND } from '@/config';
 
 function greeting() {
@@ -29,10 +29,10 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-/** Before opt-in: the personal estimate. */
+/** Before opt-in: the host's prefilled estimate, leading with the pool (Revision 02). */
 function InviteCard() {
-  const eligible = hostListings.filter((l) => l.eligible);
-  const total = roundTo(eligible.reduce((s, l) => s + listingEstimate(l.id, 'both'), 0), 100);
+  const prefill = hostPrefill();
+  const e = estimate(prefill, networkFor('launch'));
   return (
     <View style={styles.dark}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -42,16 +42,19 @@ function InviteCard() {
         </View>
       </View>
       <View style={{ gap: 4 }}>
-        <T style={{ color: '#F5F5F4', fontSize: 40, lineHeight: 44, letterSpacing: -1.2 }} variant="bodyStrong">{money0(total)}</T>
+        <T style={{ color: '#F5F5F4', fontSize: 40, lineHeight: 44, letterSpacing: -1.2 }} variant="bodyStrong">
+          {money10(e.pool)}
+          <T style={{ color: hs.muted }}> a year from the pool</T>
+        </T>
         <T variant="callout" style={{ color: hs.muted, lineHeight: 21 }}>
-          What your empty nights could earn in a year, from your {eligible.length} listings.
+          A share of every membership for your {prefill.homes} listings. About {money10(e.total)} a year in all.
         </T>
       </View>
       <PressScale
         accessibilityRole="button"
         onPress={() => {
           haptics.tapLight();
-          router.push('/host/value');
+          router.push('/preview/hostshare/value');
         }}
         style={styles.lightButton}
       >
@@ -76,7 +79,7 @@ function EarningsCard() {
     <View style={styles.light}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <T variant="captionStrong">hostmenow</T>
-        <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/host/listings', params: { mode: 'manage' } })} hitSlop={8} style={{ paddingVertical: 8 }}>
+        <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/preview/hostshare/listings', params: { mode: 'manage' } })} hitSlop={8} style={{ paddingVertical: 8 }}>
           <T variant="captionStrong">Manage</T>
         </Pressable>
       </View>

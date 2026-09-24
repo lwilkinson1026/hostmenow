@@ -30,7 +30,7 @@ export default function Payouts() {
   const { w9, setW9, w9OnFile } = useHost();
   const complete = w9OnFile || (w9.legal.trim() && w9.tin.replace(/\D/g, '').length === 9 && w9.address.trim());
   return (
-    <HostStep progress={4 / 6} actions={<HostButton label="Continue" disabled={!complete} onPress={() => router.push('/host/terms')} />}>
+    <HostStep progress={4 / 6} actions={<HostButton label="Continue" disabled={!complete} onPress={() => router.push('/preview/hostshare/terms')} />}>
       <T variant="title" style={{ marginTop: 28, marginBottom: 4 }}>Where earnings go.</T>
       <T variant="callout" color="inkSecondary">Paid stays arrive with your Hostshare payouts. Pool shares arrive each quarter.</T>
       <View style={styles.account}>

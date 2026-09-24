@@ -182,7 +182,7 @@ export default function Landing() {
         <T variant="caption" tone="dark" color="inkTertiary">Privacy</T>
       </Pressable>
       <T variant="caption" tone="dark" color="inkTertiary">·</T>
-      <Pressable accessibilityRole="link" hitSlop={8} onPress={() => router.push('/host')}>
+      <Pressable accessibilityRole="link" hitSlop={8} onPress={() => router.push('/hosts')}>
         <T variant="caption" tone="dark" color="inkTertiary">Earn as a Host</T>
       </Pressable>
     </View>

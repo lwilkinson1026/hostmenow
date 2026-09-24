@@ -25,7 +25,7 @@ export default function Terms() {
     haptics.success();
     optIn();
     setSaving(false);
-    router.replace('/host/live');
+    router.replace('/preview/hostshare/live');
   };
 
   return (
@@ -50,7 +50,7 @@ export default function Terms() {
               <T
                 variant="calloutStrong"
                 accessibilityRole="link"
-                onPress={() => router.push('/host/terms-full')}
+                onPress={() => router.push('/preview/hostshare/terms-full')}
                 style={{ textDecorationLine: 'underline' }}
               >
                 Read them in full

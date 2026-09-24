@@ -162,7 +162,7 @@ export default function Learn() {
                 </View>
               ))}
             </View>
-            <TextButton label="See what your listings could earn" onPress={() => router.push('/host')} style={{ alignSelf: 'flex-start', height: 44 }} />
+            <TextButton label="See what your listings could earn" onPress={() => router.push('/hosts')} style={{ alignSelf: 'flex-start', height: 44 }} />
           </Section>
 
           <Section title="Questions">

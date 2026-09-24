@@ -45,7 +45,7 @@ export default function Listings() {
           {manage ? (
             <HostButton label="Save" loading={saving} onPress={save} />
           ) : (
-            <HostButton label="Continue" disabled={live.length === 0} onPress={() => router.push('/host/guests')} />
+            <HostButton label="Continue" disabled={live.length === 0} onPress={() => router.push('/preview/hostshare/guests')} />
           )}
         </>
       }

@@ -11,7 +11,7 @@ import { useHost } from '@/store/host';
 export default function Guests() {
   const { booking, setBooking, damageHold, setDamageHold } = useHost();
   return (
-    <HostStep progress={3 / 6} actions={<HostButton label="Continue" onPress={() => router.push('/host/payouts')} />}>
+    <HostStep progress={3 / 6} actions={<HostButton label="Continue" onPress={() => router.push('/preview/hostshare/payouts')} />}>
       <T variant="title" style={{ marginTop: 28, marginBottom: 4 }}>Who you'll host.</T>
       <T variant="callout" color="inkSecondary">Every member gets in the same way.</T>
       <View style={styles.box}>

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 import { host, hostListings } from '@/data/host';
-import { estimateListing, roundTo } from '@/lib/pool';
+import { estimate, networkFor, round10 } from '@/lib/estimate';
 
 export type OptInMode = 'both' | 'paid';
 export type Row = { id: string; on: boolean; mode: OptInMode };
@@ -61,10 +61,26 @@ export const useHost = create<State & Actions>()((set) => ({
   reset: () => set(initial()),
 }));
 
-/** Per-listing yearly estimate, rounded to $10 for display. */
+/** Per-listing yearly estimate from the shared estimate(), rounded to $10 for display. */
 export function listingEstimate(id: string, mode: OptInMode) {
   const l = hostListings.find((x) => x.id === id)!;
-  return roundTo(estimateListing(l.rate, l.openNights, mode).total, 10);
+  return round10(estimate({ homes: 1, rate: l.rate, openPerMonth: l.openNights, paidOnly: mode === 'paid' }, networkFor('launch')).total);
+}
+
+/**
+ * The signed-in host's prefill (Revision 02): live listings, their average rate,
+ * and average open nights. Real version: Hostshare/Hospitable calendar history,
+ * falling back to 8 with under 60 days of history, and the host's real quality.
+ */
+export function hostPrefill() {
+  const live = hostListings.filter((l) => l.eligible);
+  const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+  return {
+    homes: live.length,
+    rate: Math.round(avg(live.map((l) => l.rate)) / 10) * 10,
+    openPerMonth: Math.round(avg(live.map((l) => l.openNights))) || 8,
+    quality: 1.0,
+  };
 }
 
 export const invitesLeft = (s: Pick<State, 'invited' | 'linksShared'>) => Math.max(0, host.invites - s.invited.length - s.linksShared);

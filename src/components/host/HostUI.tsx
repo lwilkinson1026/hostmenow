@@ -26,7 +26,7 @@ export const hs = {
   accentText: '#7A6A53',
 };
 
-const close = () => router.dismissTo('/host');
+const close = () => router.dismissTo('/preview/hostshare');
 
 /** Back, small wordmark, close, and a 2px progress line. */
 export function HostStepHeader({ progress, showBack = true }: { progress: number; showBack?: boolean }) {
