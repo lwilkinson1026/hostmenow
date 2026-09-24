@@ -1,6 +1,6 @@
 import Svg, { Circle, Ellipse, Path, Rect } from 'react-native-svg';
 
-export type HostIconName = 'sharing' | 'back' | 'close' | 'split' | 'coins' | 'calendar-check' | 'check' | 'bank' | 'check-bold' | 'home' | 'calendar' | 'pin' | 'inbox' | 'house';
+export type HostIconName = 'people' | 'sharing' | 'back' | 'close' | 'split' | 'coins' | 'calendar-check' | 'check' | 'bank' | 'check-bold' | 'home' | 'calendar' | 'pin' | 'inbox' | 'house';
 
 /** Icons from the Hostshare opt-in designs. */
 export function HostIcon({ name, size = 24, color = '#111111' }: { name: HostIconName; size?: number; color?: string }) {
@@ -39,6 +39,13 @@ export function HostIcon({ name, size = 24, color = '#111111' }: { name: HostIco
           <Rect x={3.5} y={5} width={17} height={15} rx={2} {...s} />
           <Path d="M3.5 10h17M8 3v4M16 3v4" {...s} />
           <Path d="m9 15 2 2 4-4" {...s} />
+        </Svg>
+      );
+    case 'people':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24">
+          <Circle cx={9} cy={8} r={3.5} {...s} />
+          <Path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.2.6 3.5 2.6 3.5 6" {...s} />
         </Svg>
       );
     case 'sharing':

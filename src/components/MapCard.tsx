@@ -64,7 +64,8 @@ export const pillLabel = (l: Listing, free: boolean) => (free ? 'Free' : `$${Mat
 
 export type ExploreMapProps = {
   listings: Listing[];
-  free: boolean;
+  /** Whether a listing shows as free for this member (bank and the host's monthly cap). */
+  freeFor: (l: Listing) => boolean;
   selectedId: string | null;
   onSelect: (id: string) => void;
   isOpen: (l: Listing, day: number) => boolean;

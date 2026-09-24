@@ -15,7 +15,7 @@ import { Sheet, type SheetRef } from '@/components/Sheet';
 import { Spinner } from '@/components/Spinner';
 import { StaticMap } from '@/components/StaticMap';
 import { T } from '@/components/Text';
-import { getListing, type Listing } from '@/data/mock';
+import { freeNightsAt, getListing, type Listing } from '@/data/mock';
 import { plural } from '@/lib/dates';
 import { money } from '@/lib/pricing';
 import { haptics, identity, invites } from '@/services';
@@ -94,7 +94,7 @@ export default function ListingScreen() {
   const insets = useInsets();
   const { height } = useWindowDimensions();
   const bank = useFreeNights();
-  const free = bank > 0;
+  const free = listing ? freeNightsAt(listing, bank) > 0 : false;
   const { idStatus, membership, setIdStatus } = useApp();
   const [expanded, setExpanded] = useState(false);
   const [info, setInfo] = useState<'amenities' | 'rules'>('amenities');

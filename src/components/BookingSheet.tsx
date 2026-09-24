@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Switch, View } from 'react-native';
 
-import type { Listing } from '@/data/mock';
+import { freeNightsAt, type Listing } from '@/data/mock';
 import { addDays, fullDate, longDay, plural, shortDay, toISODate, today } from '@/lib/dates';
 import { money, priceStay } from '@/lib/pricing';
 import { nightsIn, rangeOpen, type Range, type RangeRules } from '@/lib/range';
@@ -45,7 +45,10 @@ export const BookingSheet = forwardRef<SheetRef, Props>(function BookingSheet({ 
   useEffect(() => setRange(initial), [initial]);
 
   const nights = range ? nightsIn(range) : 0;
-  const price = priceStay(listing, Math.max(nights, 1), usable, useFree);
+  // Free nights here are the member's bank, within the host's monthly cap.
+  const freeHere = freeNightsAt(listing, usable);
+  const capReached = usable > 0 && freeHere === 0;
+  const price = priceStay(listing, Math.max(nights, 1), freeHere, useFree);
   const inDate = range ? addDays(today(), range.start) : null;
   const outDate = range ? addDays(today(), range.end + 1) : null;
   const locked = banked > 0 && usable === 0;
@@ -89,7 +92,7 @@ export const BookingSheet = forwardRef<SheetRef, Props>(function BookingSheet({ 
         <LineItem strong label="Total" value={money(price.total)} />
       </View>
 
-      {usable > 0 ? (
+      {freeHere > 0 ? (
         <View style={{ marginTop: 8, minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <T>Use free nights</T>
           <Switch
@@ -104,6 +107,10 @@ export const BookingSheet = forwardRef<SheetRef, Props>(function BookingSheet({ 
             {...({ activeThumbColor: '#FFFFFF' } as object)}
           />
         </View>
+      ) : capReached ? (
+        <T variant="caption" color="inkSecondary" style={{ marginTop: 12 }}>
+          This home's free nights are taken for this month. You can still stay at half price.
+        </T>
       ) : locked && firstUnlock ? (
         <T variant="caption" color="inkSecondary" style={{ marginTop: 12 }}>
           Your free nights unlock {fullDate(toISODate(firstUnlock))}.

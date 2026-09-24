@@ -61,9 +61,14 @@ export type EstimateInput = {
    * stays (no hosted points) and available points at 50%, per HANDOFF section 6.
    */
   paidOnly?: boolean;
+  /**
+   * Host-set limit on free member nights per listing per month (null or absent:
+   * no limit). Free demand past the limit isn't hosted, so it earns no hosted points.
+   */
+  freeCapPerMonth?: number | null;
 };
 
-export function estimate({ homes, rate, openPerMonth, quality = 1.0, paidOnly = false }: EstimateInput, net: NetworkStats) {
+export function estimate({ homes, rate, openPerMonth, quality = 1.0, paidOnly = false, freeCapPerMonth = null }: EstimateInput, net: NetworkStats) {
   const P = PRICING;
   const W = (r: number) => Math.min(3, Math.max(0.5, r / P.rateWeightBase));
 
@@ -79,7 +84,8 @@ export function estimate({ homes, rate, openPerMonth, quality = 1.0, paidOnly = 
 
   const hostAvail = homes * openPerMonth * 12;
   const hostFilled = hostAvail * fill;
-  const hostFree = paidOnly ? 0 : hostFilled * freeShare;
+  const freeCap = freeCapPerMonth === null ? Infinity : freeCapPerMonth * 12 * homes;
+  const hostFree = paidOnly ? 0 : Math.min(hostFilled * freeShare, freeCap);
   const hostPaid = hostFilled * (1 - freeShare);
 
   const wH = W(rate) * quality;

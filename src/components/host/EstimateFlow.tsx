@@ -3,16 +3,16 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { BRAND } from '@/config';
+import { BRAND, MEMBERSHIP_MONTHLY, PRICING_CONFIG } from '@/config';
 import { PressScale } from '@/components/PressScale';
 import { T } from '@/components/Text';
 import { estimate, money10, networkFor, type EstimateInput, type Stage } from '@/lib/estimate';
 import { useInsets } from '@/lib/insets';
 import { haptics } from '@/services';
 import { radius } from '@/theme';
-import { HostIcon } from './HostIcon';
+import { HostIcon, type HostIconName } from './HostIcon';
 import { HostButton, HostSegmented, HostTextButton, hs } from './HostUI';
 
 const HOMES = [
@@ -32,7 +32,8 @@ const RATE_MIN = 80;
 const RATE_MAX = 600;
 
 type Inputs = Required<Pick<EstimateInput, 'homes' | 'rate' | 'openPerMonth'>> & { quality?: number };
-type Step = 1 | 2 | 3 | 4;
+/** 0 is how it works (public page only), 1 to 3 the questions, 4 the result. */
+type Step = 0 | 1 | 2 | 3 | 4;
 
 const DEFAULTS: Inputs = { homes: 1, rate: 220, openPerMonth: 8 };
 
@@ -144,6 +145,56 @@ export function EstimateResult({ inputs, stage, onStage }: { inputs: Inputs; sta
   );
 }
 
+const poolPct = `${Math.round(PRICING_CONFIG.pool_share_of_membership * 100)}%`;
+
+const HOW: { icon: HostIconName; title: string; body: string }[] = [
+  { icon: 'people', title: 'Travelers join.', body: `People pay $${MEMBERSHIP_MONTHLY} a month to travel for less.` },
+  { icon: 'coins', title: 'Nearly half goes to hosts.', body: `${poolPct} of every membership goes into a pool for hosts, plus a share of the fees on paid stays.` },
+  { icon: 'calendar-check', title: 'You open your empty nights.', body: 'Nights still free 5 days out earn you a share, even if nobody books them.' },
+  { icon: 'split', title: 'Guests who stay add more.', body: 'Half-price stays pay you directly. Free stays earn a bigger share. Paid each quarter.' },
+];
+
+/** One step of the picture; fades up in turn once `play` is true. */
+function HowStep({ h, i, play, last }: { h: (typeof HOW)[number]; i: number; play: boolean; last: boolean }) {
+  const reduceMotion = useReducedMotion();
+  const p = useSharedValue(reduceMotion ? 1 : 0);
+  useEffect(() => {
+    if (play && !reduceMotion) p.value = withDelay(150 + i * 170, withTiming(1, { duration: 420, easing: Easing.out(Easing.ease) }));
+  }, [play, i, p, reduceMotion]);
+  const style = useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: 10 * (1 - p.value) }] }));
+  return (
+    <Animated.View style={[{ flexDirection: 'row', gap: 16 }, style]}>
+      <View style={{ alignItems: 'center', width: 44 }}>
+        <View style={styles.howIcon}>
+          <HostIcon name={h.icon} size={22} />
+        </View>
+        {last ? null : <View style={{ width: 1, flex: 1, minHeight: 18, backgroundColor: hs.line }} />}
+      </View>
+      <View style={{ flex: 1, paddingTop: 2, paddingBottom: last ? 0 : 22, gap: 2 }}>
+        <T variant="bodyStrong">{h.title}</T>
+        <T variant="callout" color="inkSecondary" style={{ lineHeight: 21 }}>{h.body}</T>
+      </View>
+    </Animated.View>
+  );
+}
+
+/** A four-step picture of the model, drawn as a quiet vertical line. Plays once it's actually on screen. */
+function HowItWorks({ play }: { play: boolean }) {
+  return (
+    <View>
+      <T variant="caption" color="inkSecondary" style={{ marginBottom: 8 }}>How it works</T>
+      <T variant="bodyStrong" accessibilityRole="header" style={{ fontSize: 30, lineHeight: 36, letterSpacing: -0.75 }}>
+        Your empty nights, paid.
+      </T>
+      <View style={{ marginTop: 28 }}>
+        {HOW.map((h, i) => (
+          <HowStep key={h.title} h={h} i={i} play={play} last={i === HOW.length - 1} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
 function Progress({ step }: { step: Step }) {
   const w = useSharedValue(step / 4);
   useEffect(() => {
@@ -166,13 +217,15 @@ type Props = {
   embedded?: boolean;
   onInputs?: (inputs: Inputs) => void;
   onCta?: () => void;
+  /** False while an intro covers the page; the how-it-works steps wait for it. */
+  revealed?: boolean;
 };
 
 /** Three questions, then the pool-led estimate (Revision 02). */
-export function EstimateFlow({ initial, startAtResult, embedded, onInputs, onCta }: Props) {
+export function EstimateFlow({ initial, startAtResult, embedded, onInputs, onCta, revealed = true }: Props) {
   const insets = useInsets();
   const [inputs, setInputs] = useState<Inputs>(initial ?? DEFAULTS);
-  const [step, setStep] = useState<Step>(startAtResult ? 4 : 1);
+  const [step, setStep] = useState<Step>(startAtResult ? 4 : embedded ? 1 : 0);
   const [stage, setStage] = useState<Stage>('launch');
   const scroller = useRef<ScrollView>(null);
 
@@ -189,7 +242,9 @@ export function EstimateFlow({ initial, startAtResult, embedded, onInputs, onCta
   const rateLabel = `$${inputs.rate}${inputs.rate >= RATE_MAX ? '+' : ''}`;
 
   const body =
-    step === 1 ? (
+    step === 0 ? (
+      <HowItWorks play={revealed} />
+    ) : step === 1 ? (
       <Question eyebrow={embedded ? undefined : '1 of 3'} title="How many homes do you host?" help="Each home earns its own share of the pool.">
         <Chips options={HOMES} value={inputs.homes} onChange={(homes) => set({ homes })} columns={5} />
       </Question>
@@ -232,10 +287,12 @@ export function EstimateFlow({ initial, startAtResult, embedded, onInputs, onCta
     );
 
   const actions =
-    step < 4 ? (
+    step === 0 ? (
+      <HostButton label="See what you'd earn" onPress={() => go(1)} />
+    ) : step < 4 ? (
       <>
         <HostButton label={step === 3 ? 'See my estimate' : 'Continue'} onPress={() => go((step + 1) as Step)} />
-        {step > 1 ? <HostTextButton label="Back" onPress={() => go((step - 1) as Step)} /> : null}
+        {step > 1 || !embedded ? <HostTextButton label="Back" onPress={() => go((step - 1) as Step)} /> : null}
       </>
     ) : embedded ? (
       <HostTextButton label="Adjust" onPress={() => go(1)} />
@@ -270,7 +327,7 @@ export function EstimateFlow({ initial, startAtResult, embedded, onInputs, onCta
           </Pressable>
           <T variant="caption" color="inkSecondary">For Hostshare hosts</T>
         </View>
-        <Progress step={step} />
+        {step === 0 ? <View style={{ height: 2 }} /> : <Progress step={step} />}
       </View>
       <ScrollView ref={scroller} contentContainerStyle={{ paddingHorizontal: 24, paddingTop: step === 4 ? 28 : 40, paddingBottom: 24 }}>
         {body}
@@ -286,4 +343,5 @@ const styles = StyleSheet.create({
   pool: { marginTop: 20, borderRadius: 20, padding: 22, backgroundColor: hs.ink, gap: 4 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, paddingVertical: 14 },
   rowLine: { borderBottomWidth: 1, borderBottomColor: hs.line },
+  howIcon: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: hs.line, alignItems: 'center', justifyContent: 'center', backgroundColor: hs.card },
 });

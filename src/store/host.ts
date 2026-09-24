@@ -7,7 +7,13 @@ import { estimate, networkFor, round10 } from '@/lib/estimate';
 
 export type OptInMode = 'both' | 'paid';
 /** `on`: opted in to hostmenow. `paused`: opted in, but not taking new member bookings or earning pool income. */
-export type Row = { id: string; on: boolean; mode: OptInMode; paused: boolean };
+export type Row = { id: string; on: boolean; mode: OptInMode; paused: boolean; freeCap: FreeCap };
+
+/** Free member nights allowed per listing per month; null is no limit. */
+export type FreeCap = number | null;
+export const FREE_CAP_DEFAULT = 4;
+/** The steps the host can pick from, ending in no limit. */
+export const FREE_CAP_STEPS: FreeCap[] = [1, 2, 3, 4, 5, 6, 8, 10, null];
 
 type State = {
   rows: Row[];
@@ -30,6 +36,7 @@ type Actions = {
   /** Save edited listings after opt-in. Turning every listing off opts the host out. */
   saveRows: (rows: Row[]) => void;
   setMode: (id: string, mode: OptInMode) => void;
+  setFreeCap: (id: string, cap: FreeCap) => void;
   setBooking: (b: State['booking']) => void;
   setDamageHold: (v: boolean) => void;
   setW9: (patch: Partial<State['w9']>) => void;
@@ -42,7 +49,7 @@ type Actions = {
 
 const initial = (): State => ({
   // Every live listing is on by default, set to paid and free stays.
-  rows: hostListings.filter((l) => l.eligible).map((l) => ({ id: l.id, on: true, mode: 'both', paused: false })),
+  rows: hostListings.filter((l) => l.eligible).map((l) => ({ id: l.id, on: true, mode: 'both', paused: false, freeCap: FREE_CAP_DEFAULT })),
   booking: 'instant',
   damageHold: false,
   w9: { legal: '', tin: '', address: '' },
@@ -66,6 +73,7 @@ export const useHost = create<State & Actions>()((set) => ({
       return { rows: s.rows.map((r) => (r.id === id ? { ...r, paused } : r)), pauses };
     }),
   setMode: (id, mode) => set((s) => ({ rows: s.rows.map((r) => (r.id === id ? { ...r, mode } : r)) })),
+  setFreeCap: (id, freeCap) => set((s) => ({ rows: s.rows.map((r) => (r.id === id ? { ...r, freeCap } : r)) })),
   // Pausing applies instantly, so keep the store's pause state over the draft's.
   saveRows: (rows) =>
     set((s) => {
@@ -83,9 +91,11 @@ export const useHost = create<State & Actions>()((set) => ({
 }));
 
 /** Per-listing yearly estimate from the shared estimate(), rounded to $10 for display. */
-export function listingEstimate(id: string, mode: OptInMode) {
+export function listingEstimate(id: string, mode: OptInMode, freeCap: FreeCap = null) {
   const l = hostListings.find((x) => x.id === id)!;
-  return round10(estimate({ homes: 1, rate: l.rate, openPerMonth: l.openNights, paidOnly: mode === 'paid' }, networkFor('launch')).total);
+  return round10(
+    estimate({ homes: 1, rate: l.rate, openPerMonth: l.openNights, paidOnly: mode === 'paid', freeCapPerMonth: freeCap }, networkFor('launch')).total,
+  );
 }
 
 /**

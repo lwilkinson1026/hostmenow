@@ -7,8 +7,8 @@ import { HostButton, HostSegmented, HostStep, HostSwitch, hs } from '@/component
 import { T } from '@/components/Text';
 import { BRAND } from '@/config';
 import { hostListings } from '@/data/host';
-import { hostshare } from '@/services';
-import { listingEstimate, useHost, type OptInMode, type Row } from '@/store/host';
+import { haptics, hostshare } from '@/services';
+import { FREE_CAP_STEPS, listingEstimate, useHost, type FreeCap, type OptInMode, type Row } from '@/store/host';
 
 /** 3. Every live listing is on, paid and free stays, with a live estimate. Also "Manage" after opt-in. */
 export default function Listings() {
@@ -22,12 +22,14 @@ export default function Listings() {
     manage ? setDraft((d) => d.map((r) => (r.id === id ? { ...r, on: !r.on } : r))) : store.toggle(id);
   const setMode = (id: string, mode: OptInMode) =>
     manage ? setDraft((d) => d.map((r) => (r.id === id ? { ...r, mode } : r))) : store.setMode(id, mode);
+  const setCap = (id: string, cap: FreeCap) =>
+    manage ? setDraft((d) => d.map((r) => (r.id === id ? { ...r, freeCap: cap } : r))) : store.setFreeCap(id, cap);
   const [saving, setSaving] = useState(false);
   const live = rows.filter((r) => r.on);
   // Paused listings earn nothing while paused, so the running figure counts open ones.
   const pausedOf = (id: string) => store.rows.find((r) => r.id === id)?.paused ?? false;
   const open = live.filter((r) => !pausedOf(r.id));
-  const total = open.reduce((s, r) => s + listingEstimate(r.id, r.mode), 0);
+  const total = open.reduce((s, r) => s + listingEstimate(r.id, r.mode, r.freeCap), 0);
 
   const save = async () => {
     setSaving(true);
@@ -80,7 +82,7 @@ export default function Listings() {
               </View>
             );
           }
-          const est = listingEstimate(l.id, row.mode);
+          const est = listingEstimate(l.id, row.mode, row.freeCap);
           const paused = manage && pausedOf(l.id);
           if (manage && !row.on) {
             // Removed in this edit; applies on Save.
@@ -130,9 +132,12 @@ export default function Listings() {
                 />
               ) : null}
               {row.on && row.mode === 'both' ? (
-                <T variant="caption" color="inkSecondary" style={{ marginTop: -4, paddingLeft: 4 }}>
-                  Free stays count toward your Hostshare sharing.
-                </T>
+                <>
+                  <FreeCapControl value={row.freeCap} onChange={(c) => setCap(l.id, c)} />
+                  <T variant="caption" color="inkSecondary" style={{ marginTop: -4, paddingLeft: 4 }}>
+                    Free stays count toward your Hostshare sharing.
+                  </T>
+                </>
               ) : null}
               {manage ? (
                 <Pressable accessibilityRole="button" onPress={() => toggle(l.id)} hitSlop={6} style={{ alignSelf: 'flex-start', paddingLeft: 4 }}>
@@ -147,7 +152,39 @@ export default function Listings() {
   );
 }
 
+/** "Free nights a month: up to 4", stepping through FREE_CAP_STEPS (ending at no limit). */
+function FreeCapControl({ value, onChange }: { value: FreeCap; onChange: (v: FreeCap) => void }) {
+  const i = FREE_CAP_STEPS.indexOf(value);
+  const step = (d: number) => {
+    const next = FREE_CAP_STEPS[Math.min(FREE_CAP_STEPS.length - 1, Math.max(0, i + d))];
+    if (next !== value) {
+      haptics.tapLight();
+      onChange(next);
+    }
+  };
+  const label = value === null ? 'No limit' : `Up to ${value}`;
+  return (
+    <View style={styles.cap}>
+      <View style={{ flex: 1 }}>
+        <T variant="callout">Free nights a month</T>
+        <T variant="caption" color="inkSecondary">Past this, members can still book at half price.</T>
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} accessibilityLabel={`Free nights a month, ${label}`}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Fewer free nights" disabled={i <= 0} onPress={() => step(-1)} style={[styles.capBtn, i <= 0 && { opacity: 0.35 }]} hitSlop={6}>
+          <T variant="bodyStrong">−</T>
+        </Pressable>
+        <T variant="calloutStrong" style={{ minWidth: 64, textAlign: 'center', fontVariant: ['tabular-nums'] }}>{label}</T>
+        <Pressable accessibilityRole="button" accessibilityLabel="More free nights" disabled={i >= FREE_CAP_STEPS.length - 1} onPress={() => step(1)} style={[styles.capBtn, i >= FREE_CAP_STEPS.length - 1 && { opacity: 0.35 }]} hitSlop={6}>
+          <T variant="bodyStrong">+</T>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  cap: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 4 },
+  capBtn: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: hs.line, alignItems: 'center', justifyContent: 'center' },
   row: { gap: 12, paddingVertical: 16 },
   divider: { borderBottomWidth: 1, borderBottomColor: hs.line },
   head: { flexDirection: 'row', alignItems: 'center', gap: 14 },

@@ -15,6 +15,7 @@ const sections: { title: string; body: string[] }[] = [
     body: [
       `You choose which listings join ${BRAND}, and whether each one takes paid and free stays or paid stays only. Only the primary host of a listing can opt it in.`,
       'A listing needs last-minute availability turned on in your Hostshare Share Settings before it can join.',
+      "Set how many free member nights each listing takes a month, or no limit. Once a month's limit is reached, members can still book that listing at half price.",
       "Pause a listing any time and reopen it whenever you like. There's no minimum number of nights. A paused listing takes no new member bookings and earns no pool income until you reopen it.",
       'You can also leave any time. Stays already booked still happen, whether you pause or leave.',
     ],

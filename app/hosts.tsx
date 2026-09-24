@@ -22,7 +22,7 @@ export default function Hosts() {
   return (
     <View style={{ flex: 1 }}>
       {/* Opting in happens inside Hostshare; signed-out hosts sign in there first. */}
-      <EstimateFlow onCta={() => Linking.openURL('https://hostshare.co')} />
+      <EstimateFlow revealed={!prelude} onCta={() => Linking.openURL('https://hostshare.co')} />
       {prelude ? <HostsPrelude onDone={endPrelude} /> : null}
     </View>
   );

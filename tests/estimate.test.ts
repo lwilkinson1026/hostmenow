@@ -20,3 +20,10 @@ console.log(PRICING.membershipPerYear === 300 && PRICING.poolShareOfMembership =
 const both = estimate({ homes: 1, rate: 220, openPerMonth: 8 }, NETWORK.launch);
 const paidOnly = estimate({ homes: 1, rate: 220, openPerMonth: 8, paidOnly: true }, NETWORK.launch);
 console.log(paidOnly.poolHosted === 0 && near(paidOnly.poolAvail, both.poolAvail / 2) && near(paidOnly.paid, both.paid) ? 'ok  ' : 'FAIL', 'paid stays only');
+
+// Monthly free-night cap: limits hosted free nights; no cap leaves the fixtures unchanged.
+const busy = { homes: 1, rate: 220, openPerMonth: 13 };
+const uncapped = estimate(busy, NETWORK.growing);
+const capped = estimate({ ...busy, freeCapPerMonth: 1 }, NETWORK.growing);
+console.log(near(estimate({ ...busy, freeCapPerMonth: null }, NETWORK.growing).total, uncapped.total) ? 'ok  ' : 'FAIL', 'no cap: unchanged');
+console.log(capped.freeStays <= 12 + 1e-9 && capped.poolHosted < uncapped.poolHosted && near(capped.paid, uncapped.paid) ? 'ok  ' : 'FAIL', `cap of 1 a month: ${capped.freeStays.toFixed(1)} free nights a year (was ${uncapped.freeStays.toFixed(1)}), paid stays unchanged`);

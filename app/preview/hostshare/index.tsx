@@ -131,7 +131,7 @@ function EarningsCard() {
   const listing = (id: string) => hostListings.find((l) => l.id === id)!;
   const toAccrual = (r: (typeof opted)[number]) => {
     const l = listing(r.id);
-    return { id: r.id, rate: l.rate, openNights: l.openNights, mode: r.mode, liveFrom: fromISODate(host.optedInAt).getTime() };
+    return { id: r.id, rate: l.rate, openNights: l.openNights, mode: r.mode, freeCap: r.freeCap, liveFrom: fromISODate(host.optedInAt).getTime() };
   };
   const pool = accruedPool(opted.map(toAccrual), s.pauses, quarterStart(new Date(now)).getTime(), now);
   const perDay = (rows: typeof opted) => rows.reduce((sum, r) => sum + poolPerDay(toAccrual(r)), 0);

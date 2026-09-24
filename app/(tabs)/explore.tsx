@@ -15,7 +15,7 @@ import { RangeChips } from '@/components/RangeChips';
 import { Segmented } from '@/components/Segmented';
 import type { SheetRef } from '@/components/Sheet';
 import { T, Wordmark } from '@/components/Text';
-import { listings } from '@/data/mock';
+import { freeNightsAt, listings, type Listing } from '@/data/mock';
 import { addDays, plural, shortDay, today } from '@/lib/dates';
 import { nightsIn, rangeOpen } from '@/lib/range';
 import { haptics } from '@/services';
@@ -26,7 +26,8 @@ import { colors, radius, type } from '@/theme';
 export default function Explore() {
   const insets = useInsets();
   const nights = useBankedNights();
-  const free = useFreeNights() > 0;
+  const usable = useFreeNights();
+  const freeFor = (l: Listing) => freeNightsAt(l, usable) > 0;
   const isOpen = useIsOpen();
   const { range, setRange, exploreEmpty, membership } = useApp();
   const [view, setView] = useState<'list' | 'map'>('list');
@@ -151,7 +152,7 @@ export default function Explore() {
           ) : (
             <View style={{ gap: 40, paddingTop: 8 }}>
               {open.map((l) => (
-                <ListingCard key={l.id} listing={l} free={free} onPress={() => openListing(l.id)} />
+                <ListingCard key={l.id} listing={l} free={freeFor(l)} onPress={() => openListing(l.id)} />
               ))}
             </View>
           )}
@@ -163,10 +164,10 @@ export default function Explore() {
             <View style={{ paddingHorizontal: 24 }}>{empty}</View>
           ) : (
             <View style={{ flex: 1 }}>
-              <ExploreMap listings={open} free={free} selectedId={selected?.id ?? null} onSelect={setSelectedId} isOpen={isOpen} />
+              <ExploreMap listings={open} freeFor={freeFor} selectedId={selected?.id ?? null} onSelect={setSelectedId} isOpen={isOpen} />
               {selected ? (
                 <View style={{ position: 'absolute', left: 16, right: 16, bottom: 16 }}>
-                  <MapCard listing={selected} free={free} isOpen={(d) => isOpen(selected, d)} onPress={() => openListing(selected.id)} />
+                  <MapCard listing={selected} free={freeFor(selected)} isOpen={(d) => isOpen(selected, d)} onPress={() => openListing(selected.id)} />
                 </View>
               ) : null}
             </View>

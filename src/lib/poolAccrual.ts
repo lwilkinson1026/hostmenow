@@ -14,6 +14,8 @@ export type AccrualListing = {
   rate: number;
   openNights: number;
   mode: 'both' | 'paid';
+  /** Free member nights allowed a month (null: no limit). */
+  freeCap?: number | null;
   /** When the listing joined hostmenow (ms). */
   liveFrom: number;
 };
@@ -22,8 +24,10 @@ export type AccrualListing = {
 export type PauseSpan = { listingId: string; from: number; to?: number };
 
 /** A listing's estimated pool share per day while open. */
-export function poolPerDay(l: Pick<AccrualListing, 'rate' | 'openNights' | 'mode'>): number {
-  return estimate({ homes: 1, rate: l.rate, openPerMonth: l.openNights, paidOnly: l.mode === 'paid' }, networkFor('launch')).pool / 365;
+export function poolPerDay(l: Pick<AccrualListing, 'rate' | 'openNights' | 'mode' | 'freeCap'>): number {
+  return (
+    estimate({ homes: 1, rate: l.rate, openPerMonth: l.openNights, paidOnly: l.mode === 'paid', freeCapPerMonth: l.freeCap ?? null }, networkFor('launch')).pool / 365
+  );
 }
 
 const overlap = (a0: number, a1: number, b0: number, b1: number) => Math.max(0, Math.min(a1, b1) - Math.max(a0, b0));

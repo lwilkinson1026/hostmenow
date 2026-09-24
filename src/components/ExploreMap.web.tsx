@@ -15,7 +15,7 @@ const designed: Record<string, [number, number]> = {
 };
 
 /** Web fallback: the static monochrome map with price pills. */
-export function ExploreMap({ listings, free, selectedId, onSelect, isOpen }: ExploreMapProps) {
+export function ExploreMap({ listings, freeFor, selectedId, onSelect, isOpen }: ExploreMapProps) {
   const [box, setBox] = useState({ w: 0, h: 0 });
   return (
     <View style={{ flex: 1 }} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
@@ -27,11 +27,11 @@ export function ExploreMap({ listings, free, selectedId, onSelect, isOpen }: Exp
             <Pressable
               key={l.id}
               accessibilityRole="button"
-              accessibilityLabel={`${l.name}, ${pillLabel(l, free)}`}
+              accessibilityLabel={`${l.name}, ${pillLabel(l, freeFor(l))}`}
               onPress={() => onSelect(l.id)}
               style={{ position: 'absolute', left: (dx / 393) * box.w, top: (dy / 438) * Math.max(box.h - 120, 300), zIndex: selectedId === l.id ? 2 : 1 }}
             >
-              <PricePill label={pillLabel(l, free)} selected={selectedId === l.id} isOpen={(d) => isOpen(l, d)} />
+              <PricePill label={pillLabel(l, freeFor(l))} selected={selectedId === l.id} isOpen={(d) => isOpen(l, d)} />
             </Pressable>
           );
         })}

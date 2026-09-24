@@ -22,6 +22,11 @@ export type Listing = {
   street: string;
   /** Day offsets from today (1..10) when the home is blocked. Source of truth is Hostshare availability. */
   closedDays: number[];
+  /**
+   * Free member nights still open this month under the host's monthly cap
+   * (absent: no cap reached). Past it, members can book at half price.
+   */
+  freeNightsLeft?: number;
 };
 
 const p = (src: ImageSourcePropType, alt: string, cropX = 50) => ({ src, alt, cropX });
@@ -75,6 +80,7 @@ export const listings: Listing[] = [
     rules: standardRules,
     street: 'Lakeshore Dr',
     closedDays: [4, 5, 8],
+    freeNightsLeft: 0,
   },
   {
     id: 'desert-modern', name: 'Desert Modern', region: 'Joshua Tree, CA',
@@ -115,6 +121,7 @@ export const listings: Listing[] = [
     rules: standardRules,
     street: 'Orchard Ln',
     closedDays: [5, 6],
+    freeNightsLeft: 1,
   },
   {
     id: 'coast-loft', name: 'Coast Loft', region: 'Cannon Beach, OR',
@@ -162,6 +169,9 @@ export const getListing = (id: string) => listings.find((l) => l.id === id);
 
 /** Is the home open on the night that is `day` days from today? */
 export const isOpenOn = (l: Listing, day: number) => !l.closedDays.includes(day);
+
+/** Free nights a member can use at this home: their bank, within the host's monthly cap. */
+export const freeNightsAt = (l: Listing, bank: number) => Math.min(bank, l.freeNightsLeft ?? Infinity);
 
 export type NightGrant = { nights: number; used: number; granted: string; expires: string };
 
