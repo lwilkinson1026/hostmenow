@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View, type TextStyle } from 'react-native';
 
+import { PrimaryButton } from '@/components/Buttons';
 import { HouseBackdrop, ramp, TypedLine, usePreludeClock } from '@/components/Typewriter';
 import { colors, type } from '@/theme';
 
@@ -29,8 +30,11 @@ function buildTimeline() {
   t = clear[1] + 450;
   const l4 = { at: t, end: t + L4.length * 60 }; // slower, deliberate
   const lightsOn = [l4.at, l4.at + 1500] as const;
-  const reveal = [l4.end + 1900, l4.end + 2800] as const;
-  return { l1, l2, l3a, l3b, clear, l4, lightsOn, reveal, end: reveal[1] };
+  // Then one button, and the intro waits for it.
+  const buttonAt = l4.end + 900;
+  const holdAt = buttonAt + 500;
+  const reveal = [holdAt + 50, holdAt + 850] as const;
+  return { l1, l2, l3a, l3b, clear, l4, lightsOn, buttonAt, holdAt, reveal, end: reveal[1] };
 }
 
 const TL = buildTimeline();
@@ -43,8 +47,10 @@ export function HostsPrelude({ onDone }: { onDone: () => void }) {
   // Size to the space the intro actually has (on desktop web /hosts sits in a phone-width column).
   const [width, setWidth] = useState(0);
   const wide = width >= 700;
-  const { now, skipTo } = usePreludeClock(TL.end, onDone);
+  const { now, skipTo, release } = usePreludeClock(TL.end, onDone, TL.holdAt);
+  // Skipping before the button skips the whole intro, button included.
   const skip = () => skipTo(TL.reveal[1] - 350);
+  const buttonIn = ramp(now, TL.buttonAt, TL.buttonAt + 500);
 
   const blink = Math.floor(now / 450) % 2 === 0;
   const size = wide ? 34 : 26;
@@ -73,7 +79,8 @@ export function HostsPrelude({ onDone }: { onDone: () => void }) {
     <View
       onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
       style={[StyleSheet.absoluteFill, { backgroundColor: colors.dark.bg, opacity: fadeOut, zIndex: 10 }]}
-      accessible
+      // One readable block while it plays; once the button is up, it must be reachable on its own.
+      accessible={now < TL.buttonAt}
       accessibilityLabel={`${L1} ${L2} ${l3} ${L4}`}
     >
       <StatusBar style="light" />
@@ -99,12 +106,17 @@ export function HostsPrelude({ onDone }: { onDone: () => void }) {
         </View>
       ) : (
         <View style={[styles.column, { alignItems: 'center', maxWidth: wide ? 720 : 520 }]}>
-          <TypedLine text={L4} shown={typed(now, L4, TL.l4.at, 60)} caret={now >= TL.l4.at && (now < TL.l4.end || blink)} style={{ ...bigStyle, flexShrink: 0 }} />
+          <TypedLine text={L4} shown={typed(now, L4, TL.l4.at, 60)} caret={now >= TL.l4.at && now < TL.buttonAt && (now < TL.l4.end || blink)} style={{ ...bigStyle, flexShrink: 0 }} />
+          <View style={{ marginTop: 32, width: 200, opacity: buttonIn, transform: [{ translateY: 8 * (1 - buttonIn) }] }}>
+            {now >= TL.buttonAt ? <PrimaryButton tone="dark" label="Prove it" onPress={release} /> : null}
+          </View>
         </View>
       )}
 
-      {/* Invisible: a tap anywhere skips to the estimate. */}
-      <Pressable accessibilityRole="button" accessibilityLabel="Skip intro" onPress={skip} style={StyleSheet.absoluteFill} />
+      {/* Invisible: until the button appears, a tap anywhere skips to the estimate. */}
+      {now < TL.buttonAt ? (
+        <Pressable accessibilityRole="button" accessibilityLabel="Skip intro" onPress={skip} style={StyleSheet.absoluteFill} />
+      ) : null}
     </View>
   );
 }

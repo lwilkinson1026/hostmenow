@@ -31,19 +31,26 @@ export function TypedLine({ text, shown, caret, style, dim }: { text: string; sh
 
 /**
  * A clock for a prologue (ms since it started), ending at `end` and calling
- * `onDone` once. `skipTo(ms)` jumps ahead, e.g. to the start of the fade.
+ * `onDone` once. With `holdAt`, the clock stops there until `release()` is
+ * called (e.g. a "Prove it" button). `skipTo(ms)` jumps ahead and releases any hold.
  */
-export function usePreludeClock(end: number, onDone: () => void) {
+export function usePreludeClock(end: number, onDone: () => void, holdAt?: number) {
   const [now, setNow] = useState(0);
   const start = useRef<number | null>(null);
   const offset = useRef(0);
+  const released = useRef(holdAt === undefined);
   const done = useRef(false);
 
   useEffect(() => {
     let raf = 0;
     const tick = (ts: number) => {
       if (start.current === null) start.current = ts;
-      const t = ts - start.current + offset.current;
+      let t = ts - start.current + offset.current;
+      if (!released.current && holdAt !== undefined && t > holdAt) {
+        // Hold: pull the clock back so it resumes from holdAt when released.
+        offset.current -= t - holdAt;
+        t = holdAt;
+      }
       setNow(t);
       if (t >= end) {
         if (!done.current) {
@@ -56,12 +63,16 @@ export function usePreludeClock(end: number, onDone: () => void) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [end, onDone]);
+  }, [end, onDone, holdAt]);
 
+  const release = () => {
+    released.current = true;
+  };
   const skipTo = (target: number) => {
+    released.current = true;
     if (now < target) offset.current += target - now;
   };
-  return { now, skipTo };
+  return { now, skipTo, release };
 }
 
 /**
