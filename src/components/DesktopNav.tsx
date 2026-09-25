@@ -22,23 +22,29 @@ export function DesktopNav() {
   const pathname = usePathname();
   const nights = useBankedNights();
   const devMenu = useRef<SheetRef>(null);
-  const current = pathname.startsWith('/trip') ? '/trips' : ['/nights', '/invites', '/membership', '/rules', '/agent'].includes(pathname) ? '/you' : pathname;
+  const current = pathname.startsWith('/trip')
+    ? '/trips'
+    : ['/nights', '/invites', '/membership', '/rules', '/agent'].includes(pathname)
+      ? '/you'
+      : pathname;
 
   return (
     <View style={styles.bar}>
       <View style={styles.inner}>
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel="hostmenow, Explore"
-          delayLongPress={600}
-          onPress={() => router.navigate('/explore')}
-          onLongPress={() => {
-            haptics.tapLight();
-            devMenu.current?.present();
-          }}
-        >
-          <Wordmark size={22} />
-        </Pressable>
+        <View style={styles.side}>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel="hostmenow, Explore"
+            delayLongPress={600}
+            onPress={() => router.navigate('/explore')}
+            onLongPress={() => {
+              haptics.tapLight();
+              devMenu.current?.present();
+            }}
+          >
+            <Wordmark size={22} />
+          </Pressable>
+        </View>
         <View accessibilityRole="tablist" style={styles.tabs}>
           {tabs.map((t) => {
             const on = current === t.href;
@@ -50,12 +56,14 @@ export function DesktopNav() {
                 onPress={() => router.navigate(t.href)}
                 style={({ hovered }: { hovered?: boolean }) => [styles.tab, hovered && !on ? { backgroundColor: colors.light.bgSubtle } : null]}
               >
-                <T variant={on ? 'calloutStrong' : 'callout'} color={on ? 'ink' : 'inkSecondary'}>{t.label}</T>
+                <T variant={on ? 'calloutStrong' : 'callout'} color={on ? 'ink' : 'inkSecondary'}>
+                  {t.label}
+                </T>
               </Pressable>
             );
           })}
         </View>
-        <View style={styles.right}>
+        <View style={[styles.side, { alignItems: 'flex-end' }]}>
           {/* The confirmed screen animates its own pill from the old count to the new. */}
           {pathname.startsWith('/confirmed/') ? null : <NightsPill count={nights} />}
         </View>
@@ -76,8 +84,8 @@ const styles = StyleSheet.create({
     zIndex: 5,
   },
   inner: { width: '100%', paddingHorizontal: DESKTOP_GUTTER, flexDirection: 'row', alignItems: 'center' },
-  // Centered in the whole bar, above the side content so it takes the clicks.
-  tabs: { flexDirection: 'row', gap: 4, position: 'absolute', left: 0, right: 0, justifyContent: 'center', pointerEvents: 'box-none', zIndex: 1 },
-  right: { flex: 1, alignItems: 'flex-end', pointerEvents: 'box-none' },
+  // Two equal sides keep the tabs centered in the bar without anything overlapping them.
+  side: { flex: 1, flexBasis: 0, alignItems: 'flex-start' },
+  tabs: { flexDirection: 'row', gap: 4 },
   tab: { height: 40, paddingHorizontal: 16, borderRadius: 999, justifyContent: 'center' },
 });
