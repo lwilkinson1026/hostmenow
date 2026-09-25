@@ -47,7 +47,7 @@ export default function You() {
   const desktop = useDesktop();
   const column = useColumn(640);
   const nights = useBankedNights();
-  const { membership, signOut, agent } = useApp();
+  const { membership, signOut, agent, watching } = useApp();
   const invitesLeft = useInvitesLeft();
 
   const doSignOut = async () => {
@@ -87,6 +87,7 @@ export default function You() {
 
         <View style={styles.group}>
           <Row first label="Nights bank" value={plural(nights, 'night')} href="/nights" />
+          <Row label="Watching" value={watching.length ? plural(watching.length, 'home') : undefined} href="/watching" />
           <Row label="Invites" value={`${invitesLeft} left`} href="/invites" />
           <Row label="Connect your bot" value={agent.client ? `${agent.client} connected` : agent.keyLast4 ? 'Waiting' : 'Off'} href="/agent" />
           <Row

@@ -1,7 +1,8 @@
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
+import Animated, { interpolate, useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useInsets } from '@/lib/insets';
 import { CONTENT_MAX, DESKTOP_GUTTER, useDesktop } from '@/lib/layout';
@@ -13,9 +14,11 @@ import { Hairline } from '@/components/Hairline';
 import { Icon, type IconName } from '@/components/Icon';
 import { PressScale } from '@/components/PressScale';
 import { PriceLine } from '@/components/PriceLine';
+import { EASE_OUT } from '@/components/Reveal';
 import { Sheet, type SheetRef } from '@/components/Sheet';
 import { Spinner } from '@/components/Spinner';
 import { StaticMap } from '@/components/StaticMap';
+import { WatchButton } from '@/components/WatchButton';
 import { T } from '@/components/Text';
 import { freeNightsAt, getListing, type Listing } from '@/data/mock';
 import { plural } from '@/lib/dates';
@@ -72,20 +75,37 @@ function Carousel({ listing, height }: { listing: Listing; height: number }) {
   );
 }
 
+/** Desktop: a photo tile that eases into a slight zoom while the pointer rests on it. */
+function HoverZoom({ style, children }: { style: object; children: ReactNode }) {
+  const z = useSharedValue(0);
+  const a = useAnimatedStyle(() => ({ transform: [{ scale: 1 + 0.035 * z.value }] }));
+  return (
+    <Pressable
+      accessible={false}
+      onHoverIn={() => z.set(withTiming(1, { duration: 900, easing: EASE_OUT }))}
+      onHoverOut={() => z.set(withTiming(0, { duration: 700, easing: EASE_OUT }))}
+      style={[style, { overflow: 'hidden' }]}
+    >
+      <Animated.View style={[{ flex: 1 }, a]}>{children}</Animated.View>
+    </Pressable>
+  );
+}
+
 /** Desktop: one large photo with up to four beside it, or one wide photo. */
 function PhotoGrid({ listing, height }: { listing: Listing; height: number }) {
   const [first, ...rest] = listing.photos;
   const side = rest.slice(0, 4);
   const img = (p: Listing['photos'][number], style: object) => (
-    <Image
-      key={p.alt}
-      source={p.src}
-      accessibilityLabel={p.alt}
-      contentFit="cover"
-      contentPosition={{ left: `${p.cropX}%`, top: '50%' }}
-      transition={200}
-      style={style}
-    />
+    <HoverZoom key={p.alt} style={style}>
+      <Image
+        source={p.src}
+        accessibilityLabel={p.alt}
+        contentFit="cover"
+        contentPosition={{ left: `${p.cropX}%`, top: '50%' }}
+        transition={200}
+        style={{ width: '100%', height: '100%' }}
+      />
+    </HoverZoom>
   );
   const tile = (height - 8) / 2;
   return (
@@ -132,6 +152,20 @@ export default function ListingScreen() {
   const bank = useFreeNights();
   const free = listing ? freeNightsAt(listing, bank) > 0 : false;
   const { idStatus, membership, setIdStatus } = useApp();
+  // Phones: the photo drifts at half speed as the page scrolls, and stretches when pulled down.
+  const reduce = useReducedMotion();
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.value = e.contentOffset.y;
+  });
+  const heroH = Math.round(height * 0.55);
+  const hero = useAnimatedStyle(() => {
+    if (reduce) return {};
+    const y = scrollY.value;
+    return y < 0
+      ? { transform: [{ translateY: y / 2 }, { scale: interpolate(y, [-heroH, 0], [2, 1]) }] }
+      : { transform: [{ translateY: y * 0.5 }] };
+  });
   const desktop = useDesktop();
   const [expanded, setExpanded] = useState(false);
   const [info, setInfo] = useState<'amenities' | 'rules'>('amenities');
@@ -298,17 +332,20 @@ export default function ListingScreen() {
               <Icon name="chevron-left" size={18} />
               <T variant="calloutStrong">Explore</T>
             </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                haptics.tapLight();
-                invites.shareListing(listing.id);
-              }}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 40 }}
-            >
-              <Icon name="share" size={16} />
-              <T variant="calloutStrong" style={{ textDecorationLine: 'underline' }}>Share</T>
-            </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 24 }}>
+              <WatchButton listingId={listing.id} variant="text" />
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => {
+                  haptics.tapLight();
+                  invites.shareListing(listing.id);
+                }}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 40 }}
+              >
+                <Icon name="share" size={16} />
+                <T variant="calloutStrong" style={{ textDecorationLine: 'underline' }}>Share</T>
+              </Pressable>
+            </View>
           </View>
           <PhotoGrid listing={listing} height={Math.min(520, Math.max(360, Math.round(height * 0.5)))} />
           <View style={{ flexDirection: 'row', gap: 64, marginTop: 40, alignItems: 'flex-start' }}>
@@ -334,16 +371,27 @@ export default function ListingScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.light.bg }}>
       <StatusBar style="light" />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 130 + insets.bottom }}>
-        <Carousel listing={listing} height={Math.round(height * 0.55)} />
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={{ paddingBottom: 130 + insets.bottom }}
+      >
+        <View style={{ height: heroH, overflow: 'visible', zIndex: 0 }}>
+          <Animated.View style={hero}>
+            <Carousel listing={listing} height={heroH} />
+          </Animated.View>
+        </View>
 
-        <View style={{ padding: 24, paddingBottom: 0, gap: 20 }}>{details}</View>
-      </ScrollView>
+        {/* Drawn over the photo, which slides beneath it. */}
+        <View style={{ padding: 24, paddingBottom: 0, gap: 20, backgroundColor: colors.light.bg, zIndex: 1 }}>{details}</View>
+      </Animated.ScrollView>
 
       <View style={[styles.floating, { top: insets.top - 5, left: 16 }]}>
         <CircleButton icon="chevron-left" label="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/explore'))} />
       </View>
-      <View style={[styles.floating, { top: insets.top - 5, right: 16 }]}>
+      <View style={[styles.floating, { top: insets.top - 5, right: 16, flexDirection: 'row', gap: 10 }]}>
+        <WatchButton listingId={listing.id} variant="circle" />
         <CircleButton
           icon="share"
           iconSize={18}

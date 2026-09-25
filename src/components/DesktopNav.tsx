@@ -24,7 +24,7 @@ export function DesktopNav() {
   const devMenu = useRef<SheetRef>(null);
   const current = pathname.startsWith('/trip')
     ? '/trips'
-    : ['/nights', '/invites', '/membership', '/rules', '/agent'].includes(pathname)
+    : ['/nights', '/invites', '/membership', '/rules', '/agent', '/watching'].includes(pathname)
       ? '/you'
       : pathname;
 

@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { View } from 'react-native';
 
 import type { Listing } from '@/data/mock';
+import { travelLabel } from '@/lib/travel';
 import { colors, radius, shadow } from '@/theme';
 import { AvailabilityDots } from './AvailabilityDots';
 import { PressScale } from './PressScale';
@@ -26,7 +27,9 @@ export function MapCard({ listing, free, isOpen, onPress }: { listing: Listing; 
       />
       <View style={{ flex: 1, justifyContent: 'center', gap: 2 }}>
         <T variant="bodyStrong" numberOfLines={1}>{listing.name}</T>
-        <T variant="callout" color="inkSecondary">{listing.region}</T>
+        <T variant="callout" color="inkSecondary" numberOfLines={1}>
+          {listing.region} · {travelLabel(listing.travel)}
+        </T>
         <PriceLine listing={listing} free={free} />
         <View style={{ marginTop: 6 }}>
           <AvailabilityDots isOpen={isOpen} labels />

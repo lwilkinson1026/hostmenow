@@ -9,6 +9,8 @@ import { DevMenu } from '@/components/DevMenu';
 import { ExploreMap } from '@/components/ExploreMap';
 import { Icon } from '@/components/Icon';
 import { ListingCard } from '@/components/ListingCard';
+import { Reveal } from '@/components/Reveal';
+import { WatchToast } from '@/components/WatchToast';
 import { MapCard } from '@/components/MapCard';
 import { NightsPill } from '@/components/NightsPill';
 import { PressScale } from '@/components/PressScale';
@@ -16,9 +18,10 @@ import { RangeChips } from '@/components/RangeChips';
 import { Segmented } from '@/components/Segmented';
 import type { SheetRef } from '@/components/Sheet';
 import { T, Wordmark } from '@/components/Text';
-import { freeNightsAt, listings, type Listing } from '@/data/mock';
+import { freeNightsAt, listings, member, type Listing } from '@/data/mock';
 import { addDays, plural, shortDay, today } from '@/lib/dates';
 import { nightsIn, rangeOpen } from '@/lib/range';
+import { byTravel } from '@/lib/travel';
 import { haptics } from '@/services';
 import { useApp, useBankedNights, useFreeNights, useIsOpen } from '@/store/app';
 import { colors, radius, type } from '@/theme';
@@ -45,7 +48,7 @@ export default function Explore() {
   const open = useMemo(() => {
     if (exploreEmpty) return [];
     const q = query.trim().toLowerCase();
-    return listings.filter((l) => {
+    return byTravel(listings).filter((l) => {
       const open = range ? rangeOpen(range, (d) => isOpen(l, d)) : [1, 2, 3, 4, 5].some((d) => isOpen(l, d));
       return open && (!q || l.name.toLowerCase().includes(q) || l.region.toLowerCase().includes(q));
     });
@@ -97,7 +100,9 @@ export default function Explore() {
 
   const count = (
     <View style={{ flexShrink: 1 }}>
-      <T variant="callout" color="inkSecondary">{open.length ? `${plural(open.length, 'home')} open` : 'Nothing open'}</T>
+      <T variant="callout" color="inkSecondary">
+        {open.length ? `${plural(open.length, 'home')} open · nearest to ${member.homeCity} first` : 'Nothing open'}
+      </T>
       {range ? (
         <T variant="caption" color="inkSecondary">
           {plural(nightsIn(range), 'night')} · out {shortDay(addDays(today(), range.end + 1))}
@@ -178,10 +183,10 @@ export default function Explore() {
             empty
           ) : (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: GRID_GAP, rowGap: 40 }}>
-              {open.map((l) => (
-                <View key={l.id} style={{ width: cardW }}>
+              {open.map((l, i) => (
+                <Reveal key={l.id} delay={Math.min(i, 8) * 80} style={{ width: cardW }}>
                   <ListingCard listing={l} free={freeFor(l)} onPress={() => openListing(l.id)} onHoverIn={() => setSelectedId(l.id)} />
-                </View>
+                </Reveal>
               ))}
             </View>
           )}
@@ -196,6 +201,7 @@ export default function Explore() {
             </View>
           ) : null}
         </View>
+        <WatchToast />
       </View>
     );
   }
@@ -215,8 +221,10 @@ export default function Explore() {
             empty
           ) : (
             <View style={{ gap: 40, paddingTop: 8 }}>
-              {open.map((l) => (
-                <ListingCard key={l.id} listing={l} free={freeFor(l)} onPress={() => openListing(l.id)} />
+              {open.map((l, i) => (
+                <Reveal key={l.id} delay={Math.min(i, 4) * 90}>
+                  <ListingCard listing={l} free={freeFor(l)} onPress={() => openListing(l.id)} />
+                </Reveal>
               ))}
             </View>
           )}
@@ -238,6 +246,7 @@ export default function Explore() {
           )}
         </View>
       )}
+      <WatchToast />
       <DevMenu ref={devMenu} onClose={() => devMenu.current?.dismiss()} />
     </View>
   );

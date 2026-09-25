@@ -27,7 +27,12 @@ export type Listing = {
    * (absent: no cap reached). Past it, members can book at half price.
    */
   freeNightsLeft?: number;
+  /** Door to door from the member's home city (mock; real version: routing API from the member's location). */
+  travel: Travel;
 };
+
+/** How far a home is: a drive, or a flight when the drive is too long for a spontaneous trip. */
+export type Travel = { mode: 'drive' | 'fly'; mins: number };
 
 const p = (src: ImageSourcePropType, alt: string, cropX = 50) => ({ src, alt, cropX });
 
@@ -59,6 +64,7 @@ export const listings: Listing[] = [
     rulesSummary: 'Check-in after 4 PM · Checkout by 11 AM · No pets',
     rules: standardRules,
     street: 'Cedar Ridge Rd',
+    travel: { mode: 'drive', mins: 135 },
     closedDays: [7],
   },
   {
@@ -79,6 +85,7 @@ export const listings: Listing[] = [
     rulesSummary: 'Check-in after 4 PM · Checkout by 11 AM · No pets',
     rules: standardRules,
     street: 'Lakeshore Dr',
+    travel: { mode: 'drive', mins: 330 },
     closedDays: [4, 5, 8],
     freeNightsLeft: 0,
   },
@@ -100,6 +107,7 @@ export const listings: Listing[] = [
     rulesSummary: 'Check-in after 4 PM · Checkout by 11 AM · No pets',
     rules: standardRules,
     street: 'Boulder Wash Rd',
+    travel: { mode: 'fly', mins: 165 },
     closedDays: [2, 3],
   },
   {
@@ -120,6 +128,7 @@ export const listings: Listing[] = [
     rulesSummary: 'Check-in after 4 PM · Checkout by 11 AM · No pets',
     rules: standardRules,
     street: 'Orchard Ln',
+    travel: { mode: 'drive', mins: 145 },
     closedDays: [5, 6],
     freeNightsLeft: 1,
   },
@@ -141,6 +150,7 @@ export const listings: Listing[] = [
     rulesSummary: 'Check-in after 4 PM · Checkout by 11 AM · No pets',
     rules: standardRules,
     street: 'Hemlock St',
+    travel: { mode: 'drive', mins: 210 },
     closedDays: [1, 9],
   },
   {
@@ -161,6 +171,7 @@ export const listings: Listing[] = [
     rulesSummary: 'Check-in after 4 PM · Checkout by 11 AM · No pets',
     rules: standardRules,
     street: 'Big Mountain Rd',
+    travel: { mode: 'fly', mins: 95 },
     closedDays: [3, 4, 5],
   },
 ];
@@ -184,6 +195,8 @@ export const member = {
   memberSince: '2026-09',
   invitedBy: { name: 'Sarah Chen', initials: 'SC' },
   joined: '2026-09-23',
+  /** Where travel times are measured from. */
+  homeCity: 'Seattle',
   /** Saved when they paid for the membership (Apple Pay saves the card behind it). Stays charge this card. */
   card: { brand: 'Visa', last4: '4242' },
   nightGrants: [{ nights: 5, used: 0, granted: '2026-09-23', expires: '2031-09-23' }] as NightGrant[],

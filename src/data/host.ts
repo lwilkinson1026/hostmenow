@@ -103,3 +103,13 @@ export const memberStayEvents: ReservationEvent[] = [
 
 /** Past pauses on this host's listings, for the running pool total. */
 export const pastPauses = [{ listingId: 'loft', from: '2026-08-10', to: '2026-08-24' }];
+
+/**
+ * Last night's member stay on a night that was still open 5 days out. The dashboard
+ * opens on it once, as a quiet notification, then it rests in the notices list.
+ */
+export const lastNightStay = { listingId: 'cedar' };
+
+/** The notice it leaves behind, e.g. "A member stayed at Cedar A-Frame on Thursday, open 5 days out. $30 from the pool." */
+export const emptyNightNotice = (listing: string, night: string, amount: string) =>
+  `A member stayed at ${listing} on ${night}, open 5 days out. ${amount} from the pool.`;

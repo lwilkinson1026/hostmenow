@@ -2,10 +2,15 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
 import { useInsets } from '@/lib/insets';
 
+import { useCountUp } from '@/components/CountUp';
 import { NavHeader } from '@/components/NavHeader';
+import { Reveal } from '@/components/Reveal';
 import { T } from '@/components/Text';
 import { fullDate, plural, toISODate, today } from '@/lib/dates';
 import { useColumn, useDesktop } from '@/lib/layout';
+import { getListing, listings } from '@/data/mock';
+import { aboutMoney, nightValue } from '@/lib/value';
+import { dollars, staysWorth } from '@/lib/worth';
 import { unlockDate, useApp, useBankedNights } from '@/store/app';
 import { colors } from '@/theme';
 
@@ -15,15 +20,31 @@ export default function Nights() {
   const desktop = useDesktop();
   const column = useColumn(640);
   const bank = useBankedNights();
-  const { nightGrants: grants, unlockDays, membership } = useApp();
+  const { nightGrants: grants, unlockDays, membership, bookings } = useApp();
+  // The number settles into place; what it's worth follows once it lands.
+  const counted = Math.round(useCountUp(bank, { duration: 1200, delay: 200 }));
+  const worth = staysWorth(bookings, (id) => getListing(id)?.retailNight);
   return (
     <View style={{ flex: 1, backgroundColor: colors.light.bg }}>
       <View style={[{ flex: 1, paddingTop: desktop ? 24 : insets.top - 5, paddingHorizontal: 24 }, column]}>
       <StatusBar style="dark" />
       <NavHeader title="Nights bank" />
       <View style={{ marginTop: 56, gap: 4 }}>
-        <T variant="bodyStrong" style={{ fontSize: 120, lineHeight: 116, letterSpacing: -4.8, paddingTop: 8 }}>{bank}</T>
+        <T
+          variant="bodyStrong"
+          accessibilityLabel={String(bank)}
+          style={{ fontSize: 120, lineHeight: 116, letterSpacing: -4.8, paddingTop: 8, fontVariant: ['tabular-nums'] }}
+        >
+          {counted}
+        </T>
         <T color="inkSecondary">free {bank === 1 ? 'night' : 'nights'}</T>
+        {bank > 0 ? (
+          <Reveal delay={1300} duration={900}>
+            <T variant="callout" color="inkSecondary" style={{ marginTop: 4 }}>
+              About {aboutMoney(bank * nightValue(listings))} at homes near you
+            </T>
+          </Reveal>
+        ) : null}
       </View>
       <View style={{ marginTop: 48, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.light.line }}>
         {grants.map((g) => (
@@ -40,6 +61,13 @@ export default function Nights() {
           </View>
         ))}
       </View>
+      {worth.nights > 0 && worth.saved > 0 ? (
+        <Reveal delay={1700} duration={900} style={{ marginTop: 20 }}>
+          <T variant="callout" color="inkSecondary">
+            Your stays so far: {plural(worth.nights, 'night')}, a {dollars(worth.saved)} value.
+          </T>
+        </Reveal>
+      ) : null}
       <T variant="caption" color="inkSecondary" style={{ marginTop: 20 }}>
         {membership === 'paused'
           ? 'Your nights are frozen while your membership is paused. They still expire on schedule.'

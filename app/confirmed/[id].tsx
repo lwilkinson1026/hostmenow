@@ -7,9 +7,11 @@ import { DESKTOP_NAV_HEIGHT, useDesktop } from '@/lib/layout';
 
 import { PrimaryButton, TextButton } from '@/components/Buttons';
 import { NightsPillChange } from '@/components/NightsPill';
+import { Reveal } from '@/components/Reveal';
 import { T } from '@/components/Text';
 import { getListing } from '@/data/mock';
 import { addDays, fromISODate, longRange } from '@/lib/dates';
+import { dollars, staysWorth } from '@/lib/worth';
 import { useApp, useBankedNights } from '@/store/app';
 import { colors, radius } from '@/theme';
 
@@ -25,6 +27,14 @@ export default function Confirmed() {
   if (!booking || !listing) return null;
 
   const inDate = fromISODate(booking.checkIn);
+  const saved = staysWorth([booking], () => listing.retailNight).saved;
+  // What this stay saved, arriving once the nights pill has settled (it lands at about 1.9s).
+  const worthLine =
+    saved > 0 ? (
+      <Reveal delay={booking.bankBefore === bank ? 900 : 2100} duration={900}>
+        <T variant="callout" color="inkSecondary">This stay is a {dollars(saved)} value.</T>
+      </Reveal>
+    ) : null;
   const cover = listing.photos[0];
   const viewTrip = () => {
     // Land the trip on top of Trips, so back goes where people expect.
@@ -54,6 +64,7 @@ export default function Confirmed() {
               <T variant="title" accessibilityRole="header">You're going to {listing.name}.</T>
               <T>{longRange(inDate, addDays(inDate, booking.nights))}</T>
               <T variant="callout" color="inkSecondary">Check-in details arrive 24 hours before.</T>
+              {worthLine}
             </View>
             <View style={{ marginTop: 48, gap: 4 }}>
               <PrimaryButton label="View trip" onPress={viewTrip} />
@@ -82,6 +93,7 @@ export default function Confirmed() {
         <T variant="title" accessibilityRole="header">You're going to {listing.name}.</T>
         <T>{longRange(inDate, addDays(inDate, booking.nights))}</T>
         <T variant="callout" color="inkSecondary">Check-in details arrive 24 hours before.</T>
+        {worthLine}
       </View>
       <View style={{ flex: 1 }} />
       <View style={{ gap: 4, paddingBottom: Math.max(insets.bottom, 16) }}>

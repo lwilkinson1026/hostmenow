@@ -43,6 +43,8 @@ type State = {
   referralDaysAhead: number;
   /** Connect your bot (MCP). */
   agent: AgentLink;
+  /** Homes the member is watching: we tell them when one opens within 5 days. */
+  watching: string[];
   /** Selected nights on Explore, as offsets from today. Null shows every home open in the window. */
   range: Range | null;
   /** Days after a grant before its free nights can be used. See config. */
@@ -66,6 +68,7 @@ type Actions = {
   setUnlockDays: (d: number) => void;
   setReferralDaysAhead: (d: number) => void;
   setAgent: (patch: Partial<AgentLink>) => void;
+  toggleWatch: (listingId: string) => void;
   setAgentPerm: (k: keyof AgentPerms, v: boolean) => void;
 };
 
@@ -159,6 +162,7 @@ const initial = (): State => ({
   hostReferrals: hostReferrals.map((r) => ({ ...r })),
   referralDaysAhead: 0,
   agent: AGENT_DEFAULT,
+  watching: ['ski-chalet'],
   range: null,
   unlockDays: FREE_NIGHTS_UNLOCK_AFTER_DAYS,
 });
@@ -230,6 +234,7 @@ export const useApp = create<State & Actions>()((set, get) => ({
   setUnlockDays: (unlockDays) => set({ unlockDays }),
   setReferralDaysAhead: (referralDaysAhead) => set({ referralDaysAhead }),
   setAgent: (patch) => set((s) => ({ agent: { ...s.agent, ...patch } })),
+  toggleWatch: (id) => set((s) => ({ watching: s.watching.includes(id) ? s.watching.filter((x) => x !== id) : [...s.watching, id] })),
   setAgentPerm: (k, v) => set((s) => ({ agent: { ...s.agent, perms: { ...s.agent.perms, [k]: v } } })),
 }));
 

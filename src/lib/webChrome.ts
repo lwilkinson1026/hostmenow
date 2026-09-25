@@ -97,7 +97,7 @@ export const LEARN_TOP = '#4F443B'; // cedar.jpg, 60% overlay
 export function pageColorsFor(pathname: string): [background: string, themeColor: string] {
   const dark = colors.dark.bg;
   if (pathname === '/') return [LANDING_EDGES.bottom, LANDING_EDGES.top];
-  if (pathname.startsWith('/onboarding') || pathname === '/id-failed') return [dark, dark];
+  if (pathname.startsWith('/onboarding') || pathname.startsWith('/i/') || pathname === '/id-failed') return [dark, dark];
   // Photo header on top, white page below.
   if (pathname === '/learn') return [colors.light.bg, LEARN_TOP];
   if (pathname === '/preview/hostshare') return ['#FAFAF9', '#FAFAF9'];

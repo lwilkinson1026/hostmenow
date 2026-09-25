@@ -27,7 +27,8 @@ export type IconName =
   | 'mountain'
   | 'waves'
   | 'snowflake'
-  | 'tree';
+  | 'tree'
+  | 'bookmark';
 
 const sf: Record<IconName, SFSymbol> = {
   search: 'magnifyingglass',
@@ -55,11 +56,13 @@ const sf: Record<IconName, SFSymbol> = {
   waves: 'water.waves',
   snowflake: 'snowflake',
   tree: 'tree',
+  bookmark: 'bookmark',
 };
 
 const filledSf: Partial<Record<IconName, SFSymbol>> = {
   trips: 'suitcase.fill',
   person: 'person.fill',
+  bookmark: 'bookmark.fill',
 };
 
 /** 24-unit outline paths from the approved designs, used off iOS. */
@@ -166,6 +169,8 @@ function Paths({ name, color, filled }: { name: IconName; color: string; filled:
       return <Path d="M2 9c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0M2 15c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0" />;
     case 'snowflake':
       return <Path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7M9 4l3 2 3-2M9 20l3-2 3 2" />;
+    case 'bookmark':
+      return <Path d="M6.5 3.5h11v17l-5.5-4-5.5 4z" fill={fillFor} />;
     case 'tree':
       return <Path d="M12 22v-6M12 3c-3.3 0-6 2.7-6 6 0 3.3 2.7 7 6 7s6-3.7 6-7c0-3.3-2.7-6-6-6z" />;
   }
@@ -175,7 +180,7 @@ type Props = {
   name: IconName;
   size?: number;
   color?: string;
-  /** Filled variant, only for the selected tab. */
+  /** Filled variant: the selected tab, and a watched home's bookmark. */
   filled?: boolean;
   strokeWidth?: number;
 };

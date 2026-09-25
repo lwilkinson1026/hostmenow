@@ -131,7 +131,7 @@ export default function Landing() {
     setChecking(false);
     if (ok) {
       setInvalid(false);
-      router.push('/onboarding/welcome');
+      router.push({ pathname: '/i/[code]', params: { code: code.trim() } });
     } else {
       setInvalid(true);
       haptics.warning();

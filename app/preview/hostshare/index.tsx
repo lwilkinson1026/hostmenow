@@ -1,16 +1,20 @@
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { HostIcon, type HostIconName } from '@/components/host/HostIcon';
 import { hs, money0 } from '@/components/host/HostUI';
+import { useCountUp } from '@/components/CountUp';
 import { PressScale } from '@/components/PressScale';
+import { EASE_OUT, Reveal } from '@/components/Reveal';
 import { T } from '@/components/Text';
-import { host, hostListings, memberStayEvents, notices, quarterStays } from '@/data/host';
+import { emptyNightNotice, host, hostListings, lastNightStay, memberStayEvents, notices, quarterStays } from '@/data/host';
 import { fromISODate, monthDay, plural } from '@/lib/dates';
 import { useInsets } from '@/lib/insets';
 import { estimate, money10, networkFor, nextPoolPayout } from '@/lib/estimate';
+import { hostedNightEarning, lastNightName } from '@/lib/hostMoment';
 import { accruedPool, poolPerDay, quarterStart } from '@/lib/poolAccrual';
 import { hostPayout, priceStay } from '@/lib/pricing';
 import { covered, fmtNights, replay } from '@/lib/shareLedger';
@@ -100,23 +104,7 @@ const money2 = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDig
 
 /** Counts up to `value` when the card opens, then follows it. */
 function CountUp({ value }: { value: number }) {
-  const [shown, setShown] = useState(0);
-  const from = useRef(0);
-  useEffect(() => {
-    let raf = 0;
-    const start = performance.now();
-    const a = from.current;
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / 1400);
-      const eased = 1 - Math.pow(1 - p, 3);
-      const v = a + (value - a) * eased;
-      setShown(v);
-      from.current = v;
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [value]);
+  const shown = useCountUp(value);
   return (
     <T variant="bodyStrong" style={{ fontSize: 40, lineHeight: 44, letterSpacing: -1.2, fontVariant: ['tabular-nums'] }}>
       {money2(shown)}
@@ -125,7 +113,7 @@ function CountUp({ value }: { value: number }) {
 }
 
 /** After opt-in: the running pool share leads, then the rest of the quarter. */
-function EarningsCard() {
+function EarningsCard({ earned = 0 }: { earned?: number }) {
   const s = useHost();
   const now = useNow(30_000);
   const opted = s.rows.filter((r) => r.on);
@@ -136,7 +124,8 @@ function EarningsCard() {
     const l = listing(r.id);
     return { id: r.id, rate: l.rate, openNights: l.openNights, mode: r.mode, freeCap: r.freeCap, liveFrom: fromISODate(host.optedInAt).getTime() };
   };
-  const pool = accruedPool(opted.map(toAccrual), s.pauses, quarterStart(new Date(now)).getTime(), now);
+  // Plus last night's hosted member stay, once the host has seen it arrive.
+  const pool = accruedPool(opted.map(toAccrual), s.pauses, quarterStart(new Date(now)).getTime(), now) + earned;
   const perDay = (rows: typeof opted) => rows.reduce((sum, r) => sum + poolPerDay(toAccrual(r)), 0);
   const total = payoutNet + pool;
 
@@ -194,6 +183,74 @@ function EarningsCard() {
   );
 }
 
+/** The dashboard opens on last night's member stay once per session, then it rests in the notices. */
+let momentSeen = false;
+type Phase = 'waiting' | 'arriving' | 'credited' | 'resting';
+
+/** Last night's hosted member stay, if that listing is live for free stays. Its value comes from estimate(). */
+function useLastNight() {
+  const row = useHost((s) => s.rows.find((r) => r.id === lastNightStay.listingId));
+  const l = hostListings.find((x) => x.id === lastNightStay.listingId);
+  if (!row || !l || !row.on || row.paused || row.mode === 'paid') return null;
+  const amount = hostedNightEarning({ rate: l.rate, openNights: l.openNights, mode: row.mode, freeCap: row.freeCap });
+  return amount > 0 ? { amount, listing: l.name, night: lastNightName() } : null;
+}
+
+/** Arrives, credits the running total, lingers, then gives way to the notices list. */
+function useMoment(active: boolean) {
+  const [phase, setPhase] = useState<Phase>(momentSeen ? 'resting' : 'waiting');
+  useEffect(() => {
+    if (!active || phase === 'resting') return;
+    // Each step hands on to the next: arrive, credit the total as it settles, linger, rest.
+    const next = { waiting: ['arriving', 1800], arriving: ['credited', 900], credited: ['resting', 6300] } as const;
+    const [to, ms] = next[phase];
+    const timer = setTimeout(() => {
+      if (to === 'arriving') haptics.tapLight();
+      setPhase(to);
+    }, ms);
+    return () => clearTimeout(timer);
+  }, [active, phase]);
+  useEffect(() => {
+    if (phase === 'resting') momentSeen = true;
+  }, [phase]);
+  return [phase, () => setPhase('resting')] as const;
+}
+
+/** A notification-like card that settles in above the tab bar, clear of the running total, then lifts away. */
+function MomentCard({ phase, night, amount, listing, onDismiss, bottom }: { phase: Phase; night: string; amount: number; listing: string; onDismiss: () => void; bottom: number }) {
+  const reduce = useReducedMotion();
+  const t = useSharedValue(0);
+  const visible = phase === 'arriving' || phase === 'credited';
+  useEffect(() => {
+    t.set(
+      visible
+        ? withTiming(1, { duration: reduce ? 200 : 1000, easing: EASE_OUT })
+        : withTiming(0, { duration: reduce ? 200 : 600, easing: Easing.in(Easing.quad) }),
+    );
+  }, [visible, reduce, t]);
+  // Once it has lifted away, let it go entirely.
+  const [gone, setGone] = useState(phase === 'resting');
+  useEffect(() => {
+    if (phase !== 'resting') return;
+    const timer = setTimeout(() => setGone(true), 700);
+    return () => clearTimeout(timer);
+  }, [phase]);
+  const a = useAnimatedStyle(() => ({ opacity: t.value, transform: [{ translateY: reduce ? 0 : 14 * (1 - t.value) }] }));
+  if (phase === 'waiting' || gone) return null;
+  return (
+    <Animated.View style={[styles.moment, { bottom }, a]} pointerEvents={visible ? 'auto' : 'none'} aria-hidden={!visible} accessibilityLiveRegion="polite">
+      <Pressable accessibilityRole="button" accessibilityHint="Dismisses" disabled={!visible} onPress={onDismiss} style={{ gap: 6 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <T variant="captionStrong">hostmenow</T>
+          <T variant="caption" color="inkSecondary">now</T>
+        </View>
+        <T variant="bodyStrong">Your empty {night} just earned {money0(amount)}.</T>
+        <T variant="callout" color="inkSecondary">A member stayed at {listing}. That night was open 5 days out.</T>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 const tabs: { icon: HostIconName; label: string }[] = [
   { icon: 'home', label: 'Home' },
   { icon: 'calendar', label: 'Calendar' },
@@ -205,6 +262,10 @@ const tabs: { icon: HostIconName; label: string }[] = [
 export default function HostDashboard() {
   const insets = useInsets();
   const optedIn = useHost((s) => s.optedIn);
+  const lastNight = useLastNight();
+  const [phase, dismiss] = useMoment(optedIn && !!lastNight);
+  const earned = lastNight && (phase === 'credited' || phase === 'resting') ? lastNight.amount : 0;
+  const [navHeight, setNavHeight] = useState(84);
   return (
     <View style={{ flex: 1, backgroundColor: hs.page }}>
       <StatusBar style="dark" />
@@ -216,13 +277,23 @@ export default function HostDashboard() {
       </View>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24, gap: 20 }}>
         <T variant="title">{greeting()}</T>
-        {optedIn ? <EarningsCard /> : <InviteCard />}
+        {optedIn ? <EarningsCard earned={earned} /> : <InviteCard />}
         <View style={{ flexDirection: 'row', gap: 12 }}>
           <Stat label="Travel nights" value={host.travelNights} />
           <Stat label="Upcoming guests" value={host.upcomingGuests + (optedIn ? 1 : 0)} />
         </View>
         {optedIn ? (
           <View style={{ gap: 8 }}>
+            {lastNight && phase === 'resting' ? (
+              <Reveal duration={900}>
+                <View style={styles.notice}>
+                  <View style={styles.badge}>
+                    <T variant="captionStrong" style={{ color: '#FFFFFF', fontSize: 12, lineHeight: 16 }}>hostmenow</T>
+                  </View>
+                  <T variant="callout" style={{ flex: 1 }}>{emptyNightNotice(lastNight.listing, lastNight.night, money0(lastNight.amount))}</T>
+                </View>
+              </Reveal>
+            ) : null}
             {notices.map((n) => (
               <View key={n} style={styles.notice}>
                 <View style={styles.badge}>
@@ -246,7 +317,10 @@ export default function HostDashboard() {
           </View>
         )}
       </ScrollView>
-      <View style={[styles.nav, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
+      {optedIn && lastNight ? (
+        <MomentCard phase={phase} night={lastNight.night} amount={lastNight.amount} listing={lastNight.listing} onDismiss={dismiss} bottom={navHeight + 12} />
+      ) : null}
+      <View onLayout={(e) => setNavHeight(e.nativeEvent.layout.height)} style={[styles.nav, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
         {tabs.map((t, i) => (
           <View key={t.label} style={{ flex: 1, alignItems: 'center', gap: 4 }}>
             <HostIcon name={t.icon} size={22} color={i === 0 ? hs.ink : hs.secondary} />
@@ -270,6 +344,7 @@ const styles = StyleSheet.create({
   legend: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
   dot: { width: 8, height: 8, borderRadius: 4 },
   stat: { flex: 1, backgroundColor: hs.card, borderWidth: 1, borderColor: hs.line, borderRadius: 12, padding: 16, gap: 4 },
+  moment: { position: 'absolute', left: 16, right: 16, zIndex: 10, backgroundColor: hs.card, borderWidth: 1, borderColor: hs.line, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 16 },
   notice: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 16, backgroundColor: hs.card, borderWidth: 1, borderColor: hs.line, borderRadius: 12 },
   badge: { backgroundColor: hs.ink, borderRadius: 999, paddingVertical: 3, paddingHorizontal: 9 },
   listingRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12 },

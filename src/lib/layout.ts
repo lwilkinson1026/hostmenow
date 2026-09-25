@@ -30,6 +30,6 @@ export function useColumn(max = 680): ViewStyle {
 
 /** Routes inside the member app. On desktop they sit under the top nav. */
 export function isAppInterior(pathname: string) {
-  return ['/explore', '/trips', '/you', '/nights', '/invites', '/membership', '/rules', '/agent'].includes(pathname) ||
+  return ['/explore', '/trips', '/you', '/nights', '/invites', '/membership', '/rules', '/agent', '/watching'].includes(pathname) ||
     ['/listing/', '/trip/', '/confirmed/'].some((p) => pathname.startsWith(p));
 }
