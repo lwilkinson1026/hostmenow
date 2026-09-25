@@ -7,7 +7,7 @@ import { Avatar } from '@/components/Avatar';
 import { Icon } from '@/components/Icon';
 import { T } from '@/components/Text';
 import { VideoTile } from '@/components/VideoTile';
-import { member } from '@/data/mock';
+import { cardLabel, member } from '@/data/mock';
 import { MEMBERSHIP_MONTHLY } from '@/config';
 import { monthDay, monthYear, nextMonthly, plural } from '@/lib/dates';
 import { useColumn, useDesktop } from '@/lib/layout';
@@ -101,7 +101,7 @@ export default function You() {
           />
         </View>
         <View style={styles.group}>
-          <Row first label="Payment methods" />
+          <Row first label="Payment method" value={cardLabel(member.card)} />
           <Row label="House rules" href="/rules" />
           <Row label="Help" />
         </View>

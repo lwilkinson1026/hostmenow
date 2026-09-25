@@ -1,14 +1,14 @@
 import { forwardRef, useMemo, useState } from 'react';
 import { StyleSheet, Switch, View } from 'react-native';
 
-import { freeNightsAt, type Listing } from '@/data/mock';
+import { cardLabel, freeNightsAt, member, type Listing } from '@/data/mock';
 import { addDays, fullDate, longDay, plural, shortDay, toISODate, today } from '@/lib/dates';
 import { money, priceStay } from '@/lib/pricing';
 import { nightsIn, rangeOpen, type Range, type RangeRules } from '@/lib/range';
 import { haptics, payments } from '@/services';
 import { freeNightsOf, unlockDate, useApp, useFreeNights, useIsOpen, type Booking } from '@/store/app';
 import { colors } from '@/theme';
-import { PayButton } from './Buttons';
+import { PrimaryButton } from './Buttons';
 import { RangeChips } from './RangeChips';
 import { LineItem } from './Rows';
 import { Sheet, type SheetRef } from './Sheet';
@@ -36,7 +36,7 @@ export const BookingSheet = forwardRef<SheetRef, Props>(function BookingSheet({ 
   );
 });
 
-/** E. Book. Tap the first and last night, guests, the breakdown, Apple Pay. Inline on the desktop listing page. */
+/** E. Book. Tap the first and last night, guests, the breakdown, then book on the card on file. Inline on the desktop listing page. */
 export function BookingPanel({ listing, onBooked, onPayingChange, beforePay }: PanelProps) {
   const usable = useFreeNights();
   const { range: exploreRange, book, nightGrants, unlockDays } = useApp();
@@ -80,9 +80,9 @@ export function BookingPanel({ listing, onBooked, onPayingChange, beforePay }: P
     if (beforePay && !(await beforePay())) return;
     setPaying(true);
     onPayingChange?.(true);
-    await payments.payStay(price.total, 'apple_pay');
+    await payments.payStay(price.total, 'card');
     haptics.success();
-    const booking = book({ listingId: listing.id, checkIn: toISODate(inDate), nights, guests, price, paidWith: 'apple_pay' });
+    const booking = book({ listingId: listing.id, checkIn: toISODate(inDate), nights, guests, price, paidWith: 'card' });
     setPaying(false);
     onPayingChange?.(false);
     onBooked(booking);
@@ -141,7 +141,11 @@ export function BookingPanel({ listing, onBooked, onPayingChange, beforePay }: P
         </T>
       ) : null}
 
-      <PayButton style={{ marginTop: 24 }} loading={paying} disabled={!range} onPress={pay} />
+      {/* Stays go on the card saved with the membership. */}
+      <PrimaryButton style={{ marginTop: 24 }} label={`Book for ${money(price.total)}`} loading={paying} disabled={!range} onPress={pay} />
+      <T variant="caption" color="inkSecondary" align="center" style={{ marginTop: 10 }}>
+        Charged to your {cardLabel(member.card)}
+      </T>
     </>
   );
 }

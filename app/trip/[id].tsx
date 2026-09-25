@@ -13,7 +13,7 @@ import { PressScale } from '@/components/PressScale';
 import { LineItem } from '@/components/Rows';
 import { StaticMap } from '@/components/StaticMap';
 import { T } from '@/components/Text';
-import { getListing } from '@/data/mock';
+import { cardLabel, getListing, member } from '@/data/mock';
 import { addDays, fromISODate, longDay, longRange, plural } from '@/lib/dates';
 import { CONTENT_MAX, DESKTOP_GUTTER, useDesktop } from '@/lib/layout';
 import { money } from '@/lib/pricing';
@@ -142,7 +142,7 @@ export default function Trip() {
           <LineItem pad={8} label="Taxes" value={money(p.taxes)} />
           {p.bookingFee ? <LineItem pad={8} label="Booking fee" value={money(p.bookingFee)} /> : null}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 10 }}>
-            <T variant="calloutStrong">Paid · {booking.paidWith === 'apple_pay' ? 'Apple Pay' : 'Card'}</T>
+            <T variant="calloutStrong">Paid · {booking.paidWith === 'apple_pay' ? 'Apple Pay' : cardLabel(member.card)}</T>
             <T variant="calloutStrong">{money(p.total)}</T>
           </View>
         </View>

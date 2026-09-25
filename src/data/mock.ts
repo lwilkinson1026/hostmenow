@@ -173,6 +173,9 @@ export const isOpenOn = (l: Listing, day: number) => !l.closedDays.includes(day)
 /** Free nights a member can use at this home: their bank, within the host's monthly cap. */
 export const freeNightsAt = (l: Listing, bank: number) => Math.min(bank, l.freeNightsLeft ?? Infinity);
 
+/** "Visa ····4242" */
+export const cardLabel = (c: { brand: string; last4: string }) => `${c.brand} ····${c.last4}`;
+
 export type NightGrant = { nights: number; used: number; granted: string; expires: string };
 
 export const member = {
@@ -181,6 +184,8 @@ export const member = {
   memberSince: '2026-09',
   invitedBy: { name: 'Sarah Chen', initials: 'SC' },
   joined: '2026-09-23',
+  /** Saved when they paid for the membership (Apple Pay saves the card behind it). Stays charge this card. */
+  card: { brand: 'Visa', last4: '4242' },
   nightGrants: [{ nights: 5, used: 0, granted: '2026-09-23', expires: '2031-09-23' }] as NightGrant[],
 };
 
