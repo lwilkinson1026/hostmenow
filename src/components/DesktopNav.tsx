@@ -22,7 +22,7 @@ export function DesktopNav() {
   const pathname = usePathname();
   const nights = useBankedNights();
   const devMenu = useRef<SheetRef>(null);
-  const current = pathname.startsWith('/trip') ? '/trips' : pathname === '/nights' || pathname === '/invites' || pathname === '/membership' ? '/you' : pathname;
+  const current = pathname.startsWith('/trip') ? '/trips' : ['/nights', '/invites', '/membership', '/rules', '/agent'].includes(pathname) ? '/you' : pathname;
 
   return (
     <View style={styles.bar}>
@@ -55,7 +55,7 @@ export function DesktopNav() {
             );
           })}
         </View>
-        <View style={{ flex: 1, alignItems: 'flex-end' }}>
+        <View style={styles.right}>
           {/* The confirmed screen animates its own pill from the old count to the new. */}
           {pathname.startsWith('/confirmed/') ? null : <NightsPill count={nights} />}
         </View>
@@ -76,6 +76,8 @@ const styles = StyleSheet.create({
     zIndex: 5,
   },
   inner: { width: '100%', paddingHorizontal: DESKTOP_GUTTER, flexDirection: 'row', alignItems: 'center' },
-  tabs: { flexDirection: 'row', gap: 4, position: 'absolute', left: 0, right: 0, justifyContent: 'center', pointerEvents: 'box-none' },
+  // Centered in the whole bar, above the side content so it takes the clicks.
+  tabs: { flexDirection: 'row', gap: 4, position: 'absolute', left: 0, right: 0, justifyContent: 'center', pointerEvents: 'box-none', zIndex: 1 },
+  right: { flex: 1, alignItems: 'flex-end', pointerEvents: 'box-none' },
   tab: { height: 40, paddingHorizontal: 16, borderRadius: 999, justifyContent: 'center' },
 });

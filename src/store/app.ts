@@ -41,6 +41,8 @@ type State = {
   hostReferrals: HostReferral[];
   /** Dev menu: days added to the clock for host referrals, to preview seats opening. */
   referralDaysAhead: number;
+  /** Connect your bot (MCP). */
+  agent: AgentLink;
   /** Selected nights on Explore, as offsets from today. Null shows every home open in the window. */
   range: Range | null;
   /** Days after a grant before its free nights can be used. See config. */
@@ -63,7 +65,19 @@ type Actions = {
   setTripsEmpty: (v: boolean) => void;
   setUnlockDays: (d: number) => void;
   setReferralDaysAhead: (d: number) => void;
+  setAgent: (patch: Partial<AgentLink>) => void;
+  setAgentPerm: (k: keyof AgentPerms, v: boolean) => void;
 };
+
+export type AgentPerms = { bookFree: boolean; bookPaid: boolean; askFirst: boolean };
+export type AgentLink = {
+  /** Last 4 of the active key; null when no key exists. */
+  keyLast4: string | null;
+  /** The agent that connected with the key, once it has. */
+  client: string | null;
+  perms: AgentPerms;
+};
+const AGENT_DEFAULT: AgentLink = { keyLast4: null, client: null, perms: { bookFree: true, bookPaid: false, askFirst: true } };
 
 /** Every unused free night in the bank, locked or not. */
 export const freeNightsOf = (grants: NightGrant[]) => grants.reduce((sum, g) => sum + g.nights - g.used, 0);
@@ -144,6 +158,7 @@ const initial = (): State => ({
   sentInvites: [...sentInvites],
   hostReferrals: hostReferrals.map((r) => ({ ...r })),
   referralDaysAhead: 0,
+  agent: AGENT_DEFAULT,
   range: null,
   unlockDays: FREE_NIGHTS_UNLOCK_AFTER_DAYS,
 });
@@ -214,6 +229,8 @@ export const useApp = create<State & Actions>()((set, get) => ({
   setTripsEmpty: (tripsEmpty) => set({ tripsEmpty }),
   setUnlockDays: (unlockDays) => set({ unlockDays }),
   setReferralDaysAhead: (referralDaysAhead) => set({ referralDaysAhead }),
+  setAgent: (patch) => set((s) => ({ agent: { ...s.agent, ...patch } })),
+  setAgentPerm: (k, v) => set((s) => ({ agent: { ...s.agent, perms: { ...s.agent.perms, [k]: v } } })),
 }));
 
 /** One host referral as the member sees it: the invites it opens for them, and when. */
