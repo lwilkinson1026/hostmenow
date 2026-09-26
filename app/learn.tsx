@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 're
 
 import { PrimaryButton, TextButton } from '@/components/Buttons';
 import { LearnPrelude } from '@/components/LearnPrelude';
+import { SavingsSlider } from '@/components/SavingsSlider';
 import { DriftBackground } from '@/components/DriftBackground';
 import { T, Wordmark } from '@/components/Text';
 import { BOOKING_FEE, BRAND, MEMBERSHIP_BENEFITS, MEMBERSHIP_MONTHLY } from '@/config';
@@ -141,6 +142,10 @@ export default function Learn() {
                 <T key={l} style={[styles.line, i === 0 && styles.lineFirst]}>{l}</T>
               ))}
             </View>
+          </Section>
+
+          <Section title="What you'd save">
+            <SavingsSlider />
           </Section>
 
           <Section title="Who's in">
