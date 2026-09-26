@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { BRAND, MEMBERSHIP_MONTHLY, PRICING_CONFIG } from '@/config';
+import { BRAND, MEMBERSHIP_MONTHLY, MIN_NIGHTLY_RATE, PRICING_CONFIG } from '@/config';
 import { PressScale } from '@/components/PressScale';
 import { T } from '@/components/Text';
 import { estimate, money10, networkFor, type EstimateInput, type Stage } from '@/lib/estimate';
@@ -28,14 +28,15 @@ const OPEN = [
   { label: '7 to 10', value: 8 },
   { label: 'More than 10', value: 13 },
 ];
-const RATE_MIN = 80;
-const RATE_MAX = 600;
+/** Homes start at the pricing minimum ($250 a night). */
+const RATE_MIN = MIN_NIGHTLY_RATE;
+const RATE_MAX = 1000;
 
 type Inputs = Required<Pick<EstimateInput, 'homes' | 'rate' | 'openPerMonth'>> & { quality?: number };
 /** 0 is how it works (public page only), 1 to 3 the questions, 4 the result. */
 type Step = 0 | 1 | 2 | 3 | 4;
 
-const DEFAULTS: Inputs = { homes: 1, rate: 220, openPerMonth: 8 };
+const DEFAULTS: Inputs = { homes: 1, rate: 350, openPerMonth: 8 };
 
 function Chips<V extends number>({ options, value, onChange, columns }: { options: { label: string; value: V }[]; value: V; onChange: (v: V) => void; columns: number }) {
   const rows: (typeof options)[] = [];
@@ -251,7 +252,7 @@ export function EstimateFlow({ initial, startAtResult, embedded, onInputs, onCta
         <Chips options={HOMES} value={inputs.homes} onChange={(homes) => set({ homes })} columns={5} />
       </Question>
     ) : step === 2 ? (
-      <Question eyebrow={embedded ? undefined : '2 of 3'} title="What's your average nightly rate?" help="Pricier homes earn a bigger share of the pool per night.">
+      <Question eyebrow={embedded ? undefined : '2 of 3'} title="What's your average nightly rate?" help={`Homes on ${BRAND} start at $${MIN_NIGHTLY_RATE} a night. Pricier homes earn a bigger share of the pool per night.`}>
         <View style={{ marginTop: 36, gap: 12 }}>
           <T variant="bodyStrong" style={{ fontSize: 56, lineHeight: 60, letterSpacing: -2.2, fontVariant: ['tabular-nums'] }}>
             {rateLabel}

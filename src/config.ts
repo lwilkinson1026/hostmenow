@@ -32,6 +32,8 @@ export type PricingConfig = {
   pool_share_of_take: number;
   host_card_fee_rate: number;
   paid_night_discount: number;
+  /** Homes must list at least this regular nightly rate to join (0: no minimum). */
+  min_nightly_rate_usd: number;
   /** Tax hook: whether the booking fee is taxed in a market. Counsel to decide per market (open). */
   booking_fee_taxable: (market: string) => boolean;
 };
@@ -47,6 +49,22 @@ export const PRICING_CONFIGS: PricingConfig[] = [
     pool_share_of_take: 0.25,
     host_card_fee_rate: 0.029,
     paid_night_discount: 0.5,
+    min_nightly_rate_usd: 0,
+    booking_fee_taxable: () => false,
+  },
+  {
+    // Luxury club (Sep 26, 2026): $79 a month, homes $250 a night and up. At this
+    // price a hosted free night pays close to what a half-price night does.
+    id: 'pricing-v4',
+    effective_from: '2026-09-26',
+    membership_monthly_usd: 79,
+    booking_fee_usd: 20,
+    pool_share_of_membership: 0.45,
+    platform_take_on_paid_stays: 0.15,
+    pool_share_of_take: 0.25,
+    host_card_fee_rate: 0.029,
+    paid_night_discount: 0.5,
+    min_nightly_rate_usd: 250,
     booking_fee_taxable: () => false,
   },
 ];
@@ -61,6 +79,7 @@ export function pricingOn(date: Date = new Date()): PricingConfig {
 export const PRICING_CONFIG = pricingOn();
 export const MEMBERSHIP_MONTHLY = PRICING_CONFIG.membership_monthly_usd;
 export const BOOKING_FEE = PRICING_CONFIG.booking_fee_usd;
+export const MIN_NIGHTLY_RATE = PRICING_CONFIG.min_nightly_rate_usd;
 
 /** The name in running text. The logo (wordmark, labels, badges) never carries the mark. */
 export const BRAND = 'hostmenow™';

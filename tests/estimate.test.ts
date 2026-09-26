@@ -1,4 +1,12 @@
-import { estimate, NETWORK, PRICING } from '../src/lib/estimate.ts';
+import { PRICING_CONFIGS } from '../src/config.ts';
+import { estimate, NETWORK, PRICING, pricingFor } from '../src/lib/estimate.ts';
+
+// Revision 03 fixtures: priced under pricing-v3 ($25 a month) on the Revision 03 network (avg rate $200).
+const V3 = pricingFor(PRICING_CONFIGS.find((c) => c.id === 'pricing-v3')!);
+const R03 = {
+  launch: { ...NETWORK.launch, avgRate: 200 },
+  growing: { ...NETWORK.growing, avgRate: 200 },
+};
 
 // Revision 03, section 4 fixtures (quality 1.0). Allow ±$1.
 const fixtures: [keyof typeof NETWORK, number, number, number, number, number, number, number, number][] = [
@@ -11,11 +19,17 @@ const fixtures: [keyof typeof NETWORK, number, number, number, number, number, n
 ];
 const near = (a: number, b: number) => Math.abs(a - b) <= 1;
 for (const [stage, homes, rate, open, pool, hosted, avail, paid, total] of fixtures) {
-  const e = estimate({ homes, rate, openPerMonth: open }, NETWORK[stage]);
+  const e = estimate({ homes, rate, openPerMonth: open }, R03[stage], V3);
   const ok = near(e.pool, pool) && near(e.poolHosted, hosted) && near(e.poolAvail, avail) && near(e.paid, paid) && near(e.total, total);
   console.log(ok ? 'ok  ' : 'FAIL', `${stage} ${homes} homes $${rate} ${open}/mo -> pool ${e.pool.toFixed(1)} hosted ${e.poolHosted.toFixed(1)} open ${e.poolAvail.toFixed(1)} paid ${e.paid.toFixed(1)} total ${e.total.toFixed(1)}`);
 }
-console.log(PRICING.membershipPerYear === 300 && PRICING.poolShareOfMembership === 0.45 && PRICING.platformTake === 0.15 && PRICING.hostCardFee === 0.029 ? 'ok  ' : 'FAIL', 'PRICING comes from the Revision 03 config');
+console.log(V3.membershipPerYear === 300 && V3.poolShareOfMembership === 0.45 && V3.platformTake === 0.15 && V3.hostCardFee === 0.029 ? 'ok  ' : 'FAIL', 'pricing-v3 matches Revision 03');
+console.log(PRICING.membershipPerYear === 79 * 12 ? 'ok  ' : 'FAIL', 'PRICING is the config in force (pricing-v4, $79 a month)');
+// At $79 and $350 homes, a hosted free night pays close to a half-price night.
+const lux = estimate({ homes: 1, rate: 300, openPerMonth: 8 }, NETWORK.launch);
+const perFree = lux.poolHosted / lux.freeStays;
+const halfNet = 300 * 0.5 * (1 - 0.15 - 0.029);
+console.log(perFree > halfNet * 0.5 ? 'ok  ' : 'FAIL', `$79: a hosted free night on a $300 home pays $${perFree.toFixed(0)} (half-price night nets $${halfNet.toFixed(0)})`);
 // Paid stays only: no hosted points, available points at half.
 const both = estimate({ homes: 1, rate: 220, openPerMonth: 8 }, NETWORK.launch);
 const paidOnly = estimate({ homes: 1, rate: 220, openPerMonth: 8, paidOnly: true }, NETWORK.launch);

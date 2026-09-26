@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { host, hostListings, pastPauses } from '@/data/host';
+import { eligibility, host, hostListings, pastPauses } from '@/data/host';
 import { fromISODate } from '@/lib/dates';
 import type { PauseSpan } from '@/lib/poolAccrual';
 import { estimate, networkFor, round10 } from '@/lib/estimate';
@@ -53,7 +53,7 @@ type Actions = {
 
 const initial = (): State => ({
   // Every live listing is on by default, set to paid and free stays.
-  rows: hostListings.filter((l) => l.eligible).map((l) => ({ id: l.id, on: true, mode: 'both', paused: false, freeCap: FREE_CAP_DEFAULT })),
+  rows: hostListings.filter((l) => eligibility(l).ok).map((l) => ({ id: l.id, on: true, mode: 'both', paused: false, freeCap: FREE_CAP_DEFAULT })),
   booking: 'instant',
   damageHold: false,
   w9: { legal: '', tin: '', address: '' },
@@ -110,7 +110,7 @@ export function listingEstimate(id: string, mode: OptInMode, freeCap: FreeCap = 
  * falling back to 8 with under 60 days of history, and the host's real quality.
  */
 export function hostPrefill() {
-  const live = hostListings.filter((l) => l.eligible);
+  const live = hostListings.filter((l) => eligibility(l).ok);
   const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
   return {
     homes: live.length,

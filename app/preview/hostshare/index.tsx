@@ -10,7 +10,7 @@ import { useCountUp } from '@/components/CountUp';
 import { PressScale } from '@/components/PressScale';
 import { EASE_OUT, Reveal } from '@/components/Reveal';
 import { T } from '@/components/Text';
-import { emptyNightNotice, host, hostListings, lastNightStay, memberStayEvents, notices, quarterStays } from '@/data/host';
+import { eligibility, emptyNightNotice, host, hostListings, lastNightStay, memberStayEvents, notices, quarterStays } from '@/data/host';
 import { fromISODate, monthDay, plural } from '@/lib/dates';
 import { useInsets } from '@/lib/insets';
 import { estimate, money10, networkFor, nextPoolPayout } from '@/lib/estimate';
@@ -307,7 +307,7 @@ export default function HostDashboard() {
           <View>
             <T variant="bodyStrong" style={{ marginBottom: 4 }}>Your listings</T>
             {hostListings
-              .filter((l) => l.eligible)
+              .filter((l) => eligibility(l).ok)
               .map((l, i, all) => (
                 <View key={l.id} style={[styles.listingRow, i < all.length - 1 && styles.divider]}>
                   <T variant="callout">{l.name}</T>

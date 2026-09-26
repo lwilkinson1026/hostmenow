@@ -41,7 +41,7 @@ const standardRules = ['Check-in after 4 PM. Checkout by 11 AM.', 'No pets. No p
 export const listings: Listing[] = [
   {
     id: 'cedar-a-frame', name: 'Cedar A-Frame', region: 'Leavenworth, WA',
-    guests: 4, bedrooms: 2, baths: 1, retailNight: 220, cleaning: 85, host: 'Marcus',
+    guests: 4, bedrooms: 2, baths: 1, retailNight: 280, cleaning: 95, host: 'Marcus',
     photos: [
       p(require('../../assets/photos/cedar.jpg'), 'Cedar A-Frame at golden hour'),
       p(require('../../assets/photos/cedar-living.jpg'), 'Living room with wood stove', 42),
@@ -134,7 +134,7 @@ export const listings: Listing[] = [
   },
   {
     id: 'coast-loft', name: 'Coast Loft', region: 'Cannon Beach, OR',
-    guests: 2, bedrooms: 1, baths: 1, retailNight: 190, cleaning: 70, host: 'Sam',
+    guests: 2, bedrooms: 1, baths: 1, retailNight: 260, cleaning: 90, host: 'Sam',
     photos: [p(require('../../assets/photos/coast.jpg'), 'Shingled beach house in coastal fog', 14)],
     coords: { lat: 45.8918, lng: -123.9615 },
     description:

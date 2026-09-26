@@ -6,7 +6,7 @@ import { HostIcon } from '@/components/host/HostIcon';
 import { HostButton, HostSegmented, HostStep, HostSwitch, hs } from '@/components/host/HostUI';
 import { T } from '@/components/Text';
 import { BRAND } from '@/config';
-import { hostListings } from '@/data/host';
+import { eligibility, hostListings } from '@/data/host';
 import { haptics, hostshare } from '@/services';
 import { FREE_CAP_STEPS, listingEstimate, useHost, type FreeCap, type OptInMode, type Row } from '@/store/host';
 
@@ -68,14 +68,15 @@ export default function Listings() {
       <View style={{ marginTop: 16 }}>
         {hostListings.map((l) => {
           const row = rows.find((r) => r.id === l.id);
-          if (!l.eligible || !row) {
+          const can = eligibility(l);
+          if (!can.ok || !row) {
             return (
               <View key={l.id} style={styles.row}>
                 <View style={styles.head}>
                   <View style={[styles.thumb, { backgroundColor: hs.subtle }]} />
                   <View style={{ flex: 1, gap: 2 }}>
                     <T variant="bodyStrong" color="inkTertiary">{l.name}</T>
-                    <T variant="caption" color="inkSecondary">{l.reason}</T>
+                    <T variant="caption" color="inkSecondary">{can.reason}</T>
                   </View>
                   <HostSwitch label={`${l.name} unavailable`} value={false} disabled />
                 </View>
