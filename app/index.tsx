@@ -12,6 +12,7 @@ import { Spinner } from '@/components/Spinner';
 import { T } from '@/components/Text';
 import { TypedWordmark } from '@/components/TypedWordmark';
 import { INTRO, introSeen, markIntroSeen } from '@/lib/intro';
+import { useChloe } from '@/store/chloe';
 import { haptics, invites } from '@/services';
 import { useApp } from '@/store/app';
 import { backdropIntro, hasWebBackdrop, setBackdrop } from '@/lib/webChrome';
@@ -56,6 +57,12 @@ export default function Landing() {
     // The skip layer goes once the page has settled; the clock runs on for "beta".
     setTimeout(finish, INTRO.settled);
   }, [clock, finish, skipIntro]);
+
+  // Chloe's launcher waits until the intro has settled.
+  useEffect(() => {
+    if (!playing) return;
+    return useChloe.getState().hide();
+  }, [playing]);
 
   // Never wait on a photo forever: if loading stalls, start anyway.
   useEffect(() => {

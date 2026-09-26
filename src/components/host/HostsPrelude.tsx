@@ -1,9 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View, type TextStyle } from 'react-native';
 
 import { PrimaryButton } from '@/components/Buttons';
 import { HouseBackdrop, ramp, TypedLine, usePreludeClock } from '@/components/Typewriter';
+import { useChloe } from '@/store/chloe';
 import { colors, type } from '@/theme';
 
 /** ms per typed character. */
@@ -48,6 +49,8 @@ export function HostsPrelude({ onDone }: { onDone: () => void }) {
   const [width, setWidth] = useState(0);
   const wide = width >= 700;
   const { now, skipTo, release } = usePreludeClock(TL.end, onDone, TL.holdAt);
+  // No help launcher over the intro.
+  useEffect(() => useChloe.getState().hide(), []);
   // Skipping before the button skips the whole intro, button included.
   const skip = () => skipTo(TL.reveal[1] - 350);
   const buttonIn = ramp(now, TL.buttonAt, TL.buttonAt + 500);

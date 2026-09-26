@@ -1,6 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, View, useWindowDimensions, type TextStyle } from 'react-native';
 
+import { useChloe } from '@/store/chloe';
 import { colors, type } from '@/theme';
 import { HouseBackdrop, ramp, TypedLine, usePreludeClock } from './Typewriter';
 
@@ -66,6 +68,8 @@ export function LearnPrelude({ onDone }: { onDone: () => void }) {
   const { width } = useWindowDimensions();
   const wide = width >= 700;
   const { now, skipTo } = usePreludeClock(TL.end, onDone);
+  // No help launcher over the story.
+  useEffect(() => useChloe.getState().hide(), []);
   // Jump to the reveal and let the fade play quickly.
   const skip = () => skipTo(TL.reveal[1] - 350);
 

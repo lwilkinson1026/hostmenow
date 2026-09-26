@@ -5,6 +5,7 @@ import { useEffect, type ReactNode } from 'react';
 import { Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { Chloe } from '@/components/Chloe';
 import { DesktopNav } from '@/components/DesktopNav';
 import { isAppInterior, useDesktop } from '@/lib/layout';
 import { pageColorsFor, setBackdrop, setPageBackground } from '@/lib/webChrome';
@@ -82,6 +83,7 @@ export default function RootLayout() {
             <Stack.Screen name="id-failed" options={{ animation: 'fade', contentStyle: { backgroundColor: colors.dark.bg } }} />
           </Stack>
           </WebFrame>
+          <Chloe />
         </BottomSheetModalProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
