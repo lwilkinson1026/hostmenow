@@ -81,6 +81,12 @@ export const MEMBERSHIP_MONTHLY = PRICING_CONFIG.membership_monthly_usd;
 export const BOOKING_FEE = PRICING_CONFIG.booking_fee_usd;
 export const MIN_NIGHTLY_RATE = PRICING_CONFIG.min_nightly_rate_usd;
 
+/**
+ * Quality bar (Sep 26, 2026): with the $250 minimum rate, what makes hostmenow a
+ * curated club. Ratings and review counts come from the host's listing history.
+ */
+export const QUALITY_BAR = { minRating: 4.8, minReviews: 10 };
+
 /** The name in running text. The logo (wordmark, labels, badges) never carries the mark. */
 export const BRAND = 'hostmenow™';
 

@@ -1,6 +1,7 @@
 // Mock Hostshare host for the opt-in prototype (handoff section 4).
 import type { ReservationEvent } from '@/lib/shareLedger';
-import { BRAND, MIN_NIGHTLY_RATE } from '@/config';
+import { BRAND, MIN_NIGHTLY_RATE, QUALITY_BAR } from '@/config';
+import { listingEligibility } from '@/lib/eligibility';
 
 export type HostListing = {
   id: string;
@@ -12,6 +13,9 @@ export type HostListing = {
   /** Hostshare earn rate (0.5x to 4x), used for share-night credit. */
   earnRate: number;
   cleaning: number;
+  /** Guest rating and review count across the listing's history. */
+  rating: number;
+  reviews: number;
   eligible: boolean;
   reason?: string;
 };
@@ -35,23 +39,17 @@ export const host = {
   referredBy: 'Jordan Ellis' as string | null,
 };
 
-/**
- * Whether a listing can join, and why not. Hostshare supplies `eligible`/`reason`
- * (last-minute availability, live status); the nightly minimum comes from pricing.
- */
-export function eligibility(l: HostListing): { ok: boolean; reason?: string } {
-  if (!l.eligible) return { ok: false, reason: l.reason };
-  if (l.rate < MIN_NIGHTLY_RATE) return { ok: false, reason: `Below the $${MIN_NIGHTLY_RATE} nightly minimum` };
-  return { ok: true };
-}
+/** Whether a listing can join: Hostshare's checks, the $250 minimum, and the quality bar. */
+export const eligibility = (l: HostListing) => listingEligibility(l);
 
 export const hostListings: HostListing[] = [
-  { id: 'orchard', name: 'Orchard House', city: 'Yakima, WA', rate: 260, openNights: 8, earnRate: 1.4, cleaning: 110, eligible: true },
-  { id: 'cedar', name: 'Cedar A-Frame', city: 'Leavenworth, WA', rate: 280, openNights: 8, earnRate: 1.2, cleaning: 95, eligible: true },
-  { id: 'loft', name: 'Downtown Loft', city: 'Yakima, WA', rate: 150, openNights: 8, earnRate: 0.8, cleaning: 65, eligible: true },
+  { id: 'orchard', name: 'Orchard House', city: 'Yakima, WA', rate: 260, openNights: 8, earnRate: 1.4, cleaning: 110, rating: 4.93, reviews: 64, eligible: true },
+  { id: 'cedar', name: 'Cedar A-Frame', city: 'Leavenworth, WA', rate: 280, openNights: 8, earnRate: 1.2, cleaning: 95, rating: 4.96, reviews: 112, eligible: true },
+  { id: 'loft', name: 'Downtown Loft', city: 'Yakima, WA', rate: 150, openNights: 8, earnRate: 0.8, cleaning: 65, rating: 4.71, reviews: 38, eligible: true },
   // Opting in requires last-minute (5-day) availability turned on in Share Settings.
-  { id: 'river', name: 'River Studio', city: 'Ellensburg, WA', rate: 130, openNights: 0, earnRate: 0.7, cleaning: 60, eligible: false, reason: 'Turn on last-minute availability first' },
-  { id: 'chelan', name: 'Lake Chelan Cabin', city: 'Chelan, WA', rate: 240, openNights: 8, earnRate: 1.3, cleaning: 95, eligible: false, reason: 'Not live on Hostshare yet' },
+  { id: 'river', name: 'River Studio', city: 'Ellensburg, WA', rate: 130, openNights: 0, earnRate: 0.7, cleaning: 60, rating: 4.88, reviews: 41, eligible: false, reason: 'Turn on last-minute availability first' },
+  { id: 'ridge', name: 'Ridge House', city: 'Cle Elum, WA', rate: 310, openNights: 8, earnRate: 1.3, cleaning: 120, rating: 4.62, reviews: 19, eligible: true },
+  { id: 'chelan', name: 'Lake Chelan Cabin', city: 'Chelan, WA', rate: 240, openNights: 8, earnRate: 1.3, cleaning: 95, rating: 4.9, reviews: 27, eligible: false, reason: 'Not live on Hostshare yet' },
 ];
 
 export const pastGuests = [
@@ -76,7 +74,7 @@ export const notices = [
 ];
 
 export const hostTerms = [
-  `Listings start at $${MIN_NIGHTLY_RATE} a night, at their regular rate.`,
+  `Listings start at $${MIN_NIGHTLY_RATE} a night, at their regular rate, with a ${QUALITY_BAR.minRating}+ rating over at least ${QUALITY_BAR.minReviews} reviews.`,
   'Members only book nights within 5 days of check-in.',
   `Paid stays are 50% of your nightly rate. ${BRAND} keeps 15%. Card fees of 2.9% come out of your stay and cleaning payouts.`,
   "Free member stays count toward your Hostshare share nights. Paid stays don't.",

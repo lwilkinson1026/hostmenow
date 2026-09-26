@@ -6,7 +6,7 @@ import { HostIcon } from '@/components/host/HostIcon';
 import { hs } from '@/components/host/HostUI';
 import { T } from '@/components/Text';
 import { useInsets } from '@/lib/insets';
-import { BRAND, MIN_NIGHTLY_RATE } from '@/config';
+import { BRAND, MIN_NIGHTLY_RATE, QUALITY_BAR } from '@/config';
 
 /** Plain-language host terms. Placeholder for the legal document; the rules here are the decided ones. */
 const sections: { title: string; body: string[] }[] = [
@@ -15,7 +15,7 @@ const sections: { title: string; body: string[] }[] = [
     body: [
       `You choose which listings join ${BRAND}, and whether each one takes paid and free stays or paid stays only. Only the primary host of a listing can opt it in.`,
       'A listing needs last-minute availability turned on in your Hostshare Share Settings before it can join.',
-      `${BRAND} is a curated club: a listing's regular nightly rate must be $${MIN_NIGHTLY_RATE} or more.`,
+      `${BRAND} is a curated club: a listing's regular nightly rate must be $${MIN_NIGHTLY_RATE} or more, with a guest rating of ${QUALITY_BAR.minRating} or higher over at least ${QUALITY_BAR.minReviews} reviews. A listing that falls below the rating is paused until it recovers.`,
       "Set how many free member nights each listing takes a month, or no limit. Once a month's limit is reached, members can still book that listing at half price.",
       "Pause a listing any time and reopen it whenever you like. There's no minimum number of nights. A paused listing takes no new member bookings and earns no pool income until you reopen it.",
       'You can also leave any time. Stays already booked still happen, whether you pause or leave.',

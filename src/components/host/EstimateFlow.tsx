@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { BRAND, MEMBERSHIP_MONTHLY, MIN_NIGHTLY_RATE, PRICING_CONFIG } from '@/config';
+import { BRAND, MEMBERSHIP_MONTHLY, MIN_NIGHTLY_RATE, PRICING_CONFIG, QUALITY_BAR } from '@/config';
 import { PressScale } from '@/components/PressScale';
 import { T } from '@/components/Text';
 import { estimate, money10, networkFor, type EstimateInput, type Stage } from '@/lib/estimate';
@@ -252,7 +252,7 @@ export function EstimateFlow({ initial, startAtResult, embedded, onInputs, onCta
         <Chips options={HOMES} value={inputs.homes} onChange={(homes) => set({ homes })} columns={5} />
       </Question>
     ) : step === 2 ? (
-      <Question eyebrow={embedded ? undefined : '2 of 3'} title="What's your average nightly rate?" help={`Homes on ${BRAND} start at $${MIN_NIGHTLY_RATE} a night. Pricier homes earn a bigger share of the pool per night.`}>
+      <Question eyebrow={embedded ? undefined : '2 of 3'} title="What's your average nightly rate?" help={`Homes on ${BRAND} start at $${MIN_NIGHTLY_RATE} a night, rated ${QUALITY_BAR.minRating} or higher. Pricier homes earn a bigger share of the pool per night.`}>
         <View style={{ marginTop: 36, gap: 12 }}>
           <T variant="bodyStrong" style={{ fontSize: 56, lineHeight: 60, letterSpacing: -2.2, fontVariant: ['tabular-nums'] }}>
             {rateLabel}
