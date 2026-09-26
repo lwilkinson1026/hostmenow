@@ -3,7 +3,7 @@
 // variables. XAI_MODEL overrides the model.
 import { FREE_NIGHT_REFUND_CUTOFF_HOURS, PRICING_CONFIG as P, SEAT_RULES } from '../src/config';
 
-const MODEL = process.env.XAI_MODEL || 'grok-4';
+const MODEL = process.env.XAI_MODEL || 'grok-4.7';
 const MAX_TURNS = 12;
 const MAX_CHARS = 1500;
 
