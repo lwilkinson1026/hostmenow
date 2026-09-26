@@ -87,6 +87,9 @@ export const MIN_NIGHTLY_RATE = PRICING_CONFIG.min_nightly_rate_usd;
  */
 export const QUALITY_BAR = { minRating: 4.8, minReviews: 10 };
 
+/** What the membership includes, as listed on Learn More, signup and the membership screen. */
+export const MEMBERSHIP_BENEFITS = ['5 free nights every year', '50% off every home after that', `Every home $${MIN_NIGHTLY_RATE} a night or more`];
+
 /** The name in running text. The logo (wordmark, labels, badges) never carries the mark. */
 export const BRAND = 'hostmenow™';
 

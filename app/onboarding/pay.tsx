@@ -5,13 +5,13 @@ import { StyleSheet, View } from 'react-native';
 import { PayButton, TextButton } from '@/components/Buttons';
 import { OnboardingScreen, useTitleTop } from '@/components/Onboarding';
 import { T } from '@/components/Text';
-import { MEMBERSHIP_MONTHLY } from '@/config';
+import { MEMBERSHIP_BENEFITS, MEMBERSHIP_MONTHLY } from '@/config';
 import { haptics, payments } from '@/services';
 import type { PayMethod } from '@/services/payments';
 import { useApp } from '@/store/app';
 import { colors } from '@/theme';
 
-const benefits = ['5 free nights every year', '50% off every night after that', 'Nights roll over for 5 years'];
+const benefits = MEMBERSHIP_BENEFITS;
 
 /** B6. Your membership. Also used to resume a paused membership. */
 export default function Pay() {

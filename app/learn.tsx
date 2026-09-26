@@ -7,7 +7,7 @@ import { PrimaryButton, TextButton } from '@/components/Buttons';
 import { LearnPrelude } from '@/components/LearnPrelude';
 import { DriftBackground } from '@/components/DriftBackground';
 import { T, Wordmark } from '@/components/Text';
-import { BOOKING_FEE, BRAND, MEMBERSHIP_MONTHLY } from '@/config';
+import { BOOKING_FEE, BRAND, MEMBERSHIP_BENEFITS, MEMBERSHIP_MONTHLY } from '@/config';
 import { useInsets } from '@/lib/insets';
 import { pageColorsFor, setPageBackground } from '@/lib/webChrome';
 import { useReducedMotion } from 'react-native-reanimated';
@@ -137,7 +137,7 @@ export default function Learn() {
               <T color="inkSecondary"> a month</T>
             </T>
             <View>
-              {['5 free nights every year', '50% off every night after that', 'Nights roll over for 5 years', 'Cancel anytime'].map((l, i) => (
+              {[...MEMBERSHIP_BENEFITS, 'Cancel anytime'].map((l, i) => (
                 <T key={l} style={[styles.line, i === 0 && styles.lineFirst]}>{l}</T>
               ))}
             </View>

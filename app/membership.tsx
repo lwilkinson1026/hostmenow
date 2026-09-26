@@ -6,7 +6,7 @@ import { StyleSheet, View } from 'react-native';
 import { PrimaryButton, TextButton } from '@/components/Buttons';
 import { NavHeader } from '@/components/NavHeader';
 import { T } from '@/components/Text';
-import { MEMBERSHIP_MONTHLY } from '@/config';
+import { MEMBERSHIP_BENEFITS, MEMBERSHIP_MONTHLY } from '@/config';
 import { member } from '@/data/mock';
 import { monthDay, nextMonthly, plural } from '@/lib/dates';
 import { useInsets } from '@/lib/insets';
@@ -15,7 +15,7 @@ import { analytics, auth, haptics } from '@/services';
 import { useApp, useBankedNights } from '@/store/app';
 import { colors } from '@/theme';
 
-const benefits = ['5 free nights every year', '50% off every night after that', 'Nights roll over for 5 years'];
+const benefits = MEMBERSHIP_BENEFITS;
 
 /** Membership, with the cancel flow and its retention screen (Revision 03, 3.7). */
 export default function Membership() {
